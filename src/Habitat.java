@@ -1,14 +1,14 @@
 import java.util.Arrays;
 
 class Habitat {
-    String habitatID;
-    String species;
-    Food food;
-    double amountFood;
-    String[] feedingTime;
-    Animal[] animals;
+    private String habitatID;
+    private String species;
+    private Food food;
+    private double amountFood;
+    private String[] feedingTime;
+    private Animal[] animals;
 
-    Habitat(String habitatID, String species, double amountFood, String[] feedingTime, Animal[] animals, Food food) {
+    public Habitat(String habitatID, String species, double amountFood, String[] feedingTime, Animal[] animals, Food food) {
         this.habitatID = habitatID;
         this.species = species;
         this.amountFood = amountFood;
@@ -17,11 +17,19 @@ class Habitat {
         this.food = food;
     }
 
-    @Override
-    public String toString() {
-        return "Habitat [habitatID=" + habitatID + ", species=" + species + ", food=" + food + ", amountFood=" + amountFood
-                + ", feedingTime=" + Arrays.toString(feedingTime) + ", animals=" + Arrays.toString(animals) + "]";
+    public String getHabitatID() {return habitatID;}
+    public String getSpecies() {return species;}
+    public double getAmountFood() {return amountFood;}
+
+    public void setAmountFood(double amountFood) {
+        if (amountFood > 0) {
+            this.amountFood = amountFood;
+        } else {
+            System.out.println("Amount of food must be positive.");
+        }
     }
+
+
 
     @Override
     public boolean equals(Object obj) {
@@ -50,6 +58,16 @@ class Habitat {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "Habitat [habitatID=" + habitatID + ", species=" + species + ", food=" + food + ", amountFood="
+                + amountFood + ", feedingTime=" + Arrays.toString(feedingTime) + ", animals=" + Arrays.toString(animals)
+                + "]";
+    } 
+
+
+    
     
     
     
