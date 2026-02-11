@@ -1,33 +1,58 @@
+import java.util.Objects;
+
 public class Staff {
-    private String staffID;
+    private String id;
     private String name;
     private String role;
     private double salary; 
     private int yearOfExperience;
-    private Habitat assignHabitat; 
+    private Habitat assignedHabitat;
 
-    public Staff(String staffID, String name, String role, double salary, int yearOfExperience) {
-        this.staffID = staffID;
+    public Staff(String id, String name, String role, double salary, int yearOfExperience) {
+        this.id = id;
         this.name = name;
         this.role = role;
         this.salary = salary;
-        this.yearOfExperience = yearOfExperience; 
+        this.yearOfExperience = yearOfExperience;
+    }
+
+    // Initialize normal staff require manager
+    public Staff(String id, String name, String role, double salary, int yearOfExperience, Staff manager) {
+        this.id = id;
+        this.name = name;
+        setRole(role,manager);
+        setSalary(salary,manager);
+        setAssignedHabitat(assignedHabitat,manager);
+        this.yearOfExperience = yearOfExperience;
     }
 
     public String getName(){return name;}
     public String getRole(){return role;}
-    public String getStaffID(){return staffID;}
+    public String getStaffID(){return id;}
     public double getSalary(){return salary;}
     public int getYearOfExperience(){return yearOfExperience;}
-    public Habitat getAssignHabitat(){return assignHabitat;}
+    public Habitat getAssignedHabitat(){return assignedHabitat;}
 
+    public void setRole(String role,Staff s) {
+        if (!s.getRole().equals("Manager")) return;
+        if (role != null) {
+            this.role = role;
+        }else {
+            System.out.println("Role is invalid");
+        }
+    }
+    
+    public void setAssignedHabitat(Habitat habitat, Staff s) {
+        if (!s.getRole().equals("Manager")) return;
+        if (habitat != null) {
+            this.assignedHabitat = habitat;
+        }else{
+            System.out.println("Habitat is invalid");
+        }
+    }
 
-    public void setName(String name) {this.name = name;}
-    public void setRole(String role) {this.role = role;}
-
-    public void setAssignHabitat(Habitat habitat) {this.assignHabitat = habitat;}
-
-    public void setSalary(double salary) {
+    public void setSalary(double salary, Staff s) {
+        if (!s.getRole().equals("Manager")) return;
         if (salary > 0) {
             this.salary = salary;
         } else {
@@ -35,10 +60,24 @@ public class Staff {
         }
     }
 
+    public void setYearOfExperience(int yearOfExperience) {
+        if (yearOfExperience > 0) {
+            this.yearOfExperience = yearOfExperience;
+        } else {
+            System.out.println("Year of Experience is invalid.");
+        }
+    }
 
     @Override
     public String toString() {
-        return "Staff [staffID=" + staffID + ", name=" + name + ", role=" + role  + "]";
+        return "Staff [StaffID=" + id + ", name=" + name + ", role=" + role  + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Staff staff = (Staff) o;
+        return Objects.equals(role, staff.role);
     }
 
 }

@@ -1,13 +1,15 @@
-class Food {
-    private int foodID;
+public class Food {
+    private int id;
     private String name;
     private String type;
     private double stock;
     private String expiryDate;
     private double costPerUnit;
+    private static int nextId = 1;
 
-    public Food(int foodID, String name, String type, double stock, String expiryDate, double costPerUnit) {
-        this.foodID = foodID;
+    public Food(String name, String type, double stock, String expiryDate, double costPerUnit) {
+        this.id = nextId;
+        nextId++;
         this.name = name;
         this.type = type;
         this.stock = stock;
@@ -15,12 +17,13 @@ class Food {
         this.costPerUnit = costPerUnit;
     }
 
-    public double getStockStatus() {
-        return stock;
-    }
-    public String getName() {
-        return name;
-    }   
+    public int getId() { return id; }
+    public double getStock() {return stock; }
+    public String getName() { return name;}
+    public String getType() { return type; }
+    public String getExpiryDate() { return expiryDate; }
+    public double getCostPerUnit() { return costPerUnit; }
+    public static int getNextId(){ return nextId; }
 
     public void setStock(double stock) {
         if (stock >= 0) {
@@ -30,23 +33,24 @@ class Food {
         }
     }
 
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Food{");
-        sb.append("foodID=").append(foodID);
-        sb.append(", name=").append(name);
-        sb.append(", type=").append(type);
-        sb.append(", stock=").append(stock);
-        sb.append(", expiryDate=").append(expiryDate);
-        sb.append(", costPerUnit=").append(costPerUnit);
-        sb.append('}');
-        return sb.toString();
+    public void setCostPerUnit(double costPerUnit) {
+        if (costPerUnit >= 0) {
+            this.costPerUnit = costPerUnit;
+        }else {
+            System.out.println("Cost per unit must be positive.");
+        }
     }
 
 
-    
-    
-
+    @Override
+    public String toString() {
+            return "Food{" +
+                    "id=" + id +
+                    ", name='" + name + '\'' +
+                    ", type='" + type + '\'' +
+                    ", stock=" + stock +
+                    ", expiryDate='" + expiryDate + '\'' +
+                    ", costPerUnit=" + costPerUnit +
+                    '}';
+        }
 }

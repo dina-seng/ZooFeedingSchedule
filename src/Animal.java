@@ -1,60 +1,56 @@
-class Animal {
-    private int animalID;
+import java.util.Objects;
+
+public class Animal {
+    private int id;
     private String name;
     private int age;
-    private Habitat habitat;
     private String species;
     private double weight;
+    private static int nextId = 1;
 
-    
-    public Animal(int animalID, String name, int age, Habitat habitat, String species, double weight) {
-        this.animalID = animalID;
+    public Animal(String name, int age, String species, double weight) {
+        this.id = nextId;
+        nextId++;
         this.name = name;
         this.age = age;
-        this.habitat = habitat;
         this.species = species;
         this.weight = weight;
-    } 
-
-    public String getName() { return name; } 
-    public int getAnimalID() { return animalID; }
-    public int getAge() { return age; }
-    public Habitat getHabitat() { return habitat; }
-    public String getSpecies() { return species; }
-    public double getWeight() { return weight; }
-
-
-    public void setAnimalID(int animalID) {
-        if (animalID > 0) {
-            this.animalID = animalID;
-        } else {
-            System.out.println("Animal ID must be positive.");
-        }
     }
 
+    public String getName() { return name; } 
+    public int getAnimalID() { return id; }
+    public int getAge() { return age; }
+    public String getSpecies() { return species; }
+    public double getWeight() { return weight; }
+    public static int getNextId() { return nextId;}
 
-    public void setWeight(double weight) {
-        if (weight >= 0) {
-            this.weight = weight;
-        } else {
-            System.out.println("Weight cannot be negative.");
+    public void setAge(int age) {
+        if (age <= 0) {
+            return;
         }
+         this.age = age;
+    }
+
+    public boolean matchesSpecies(String species) {
+        return this.species.equals(species);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Animal animal = (Animal) o;
+        return id == animal.id && age == animal.age && Double.compare(weight, animal.weight) == 0
+                && Objects.equals(name, animal.name) && Objects.equals(species, animal.species);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Animal{");
-        sb.append("animalID=").append(animalID);
-        sb.append(", name=").append(name);
-        sb.append(", age=").append(age);
-        sb.append(", habitat=").append(habitat);
-        sb.append(", species=").append(species);
-        sb.append(", weight=").append(weight);
-        sb.append('}');
-        return sb.toString();
+        return "Animal{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                ", species='" + species + '\'' +
+                ", weight=" + weight +
+                '}' + "\n";
     }
-
-
-    
 }
