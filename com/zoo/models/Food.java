@@ -1,3 +1,4 @@
+package com.zoo.models;
 public class Food {
     private int id;
     private String name;

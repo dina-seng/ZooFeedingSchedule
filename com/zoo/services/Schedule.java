@@ -1,47 +1,43 @@
+package com.zoo.services;
+
+import com.zoo.staff_interface.IStaff; // Import the interface
+
 public class Schedule {
-    private Staff assignedStaff;
+    private IStaff assignedStaff; 
     private String date;
     private String time;
     private boolean isCompleted = false;
     private String feedingNotes;
 
-    public Schedule(Staff staff, String date, String time) {
+    public Schedule(IStaff staff, String date, String time) {
         this.assignedStaff = staff;
         this.date = date;
         this.time = time;
         this.feedingNotes = "Standard Feeding";
     }
 
-    public Schedule(Staff staff, String date, String time,String Note) {
+    public Schedule(IStaff staff, String date, String time, String note) {
         this.assignedStaff = staff;
         this.date = date;
         this.time = time;
-        this.feedingNotes = Note;
+        this.feedingNotes = note;
     }
 
-    public String getFeedingNotes() { return feedingNotes; }
-    public String getDate() { return date;}
-    public Staff getAssignedStaff() { return assignedStaff; }
+    // Getters
+    public IStaff getAssignedStaff() { return assignedStaff; }
+    public String getDate() { return date; }
     public String getTime() { return time; }
     public boolean isCompleted() { return isCompleted; }
 
-
-    public void Completed() {
+    public void completeTask() {
         this.isCompleted = true;
     }
 
-    public void setFeedingNotes(String notes) {
-        if (notes != null) {
-            this.feedingNotes = notes;
-        }else {
-            System.out.println("Feed notes is invalid");
-        }
-    }
-    
     @Override
     public String toString() {
+        // Use getUsername() from the interface
         return "Feeding Schedule [" +
-               "Staff=" + assignedStaff.getName() + 
+               "Staff=" + assignedStaff.getUsername() + 
                ", Time=" + date + " " + time +
                ", Status=" + (isCompleted ? "Done" : "Pending") + "]";
     }

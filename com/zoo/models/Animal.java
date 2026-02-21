@@ -1,3 +1,4 @@
+package com.zoo.models;
 import java.util.Objects;
 
 public class Animal {
