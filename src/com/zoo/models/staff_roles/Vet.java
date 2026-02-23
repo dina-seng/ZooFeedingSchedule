@@ -8,6 +8,11 @@ public class Vet implements IStaff {
     private String username;
     private String password;
 
+    public static final String ROLE = "Vet";
+    public static final String PERFORM_MEDICAL_CHECK = "PERFORM_MEDICAL_CHECK";
+    public static final String GIVE_MEDICINE = "GIVE_MEDICINE";
+    public static final String VIEW_ZOO = "VIEW_ZOO";
+
     public Vet(String id, String name, String username, String password) {
         this.id = id;
         this.name = name;
@@ -23,8 +28,8 @@ public class Vet implements IStaff {
     @Override
     public boolean can(String action) {
         // Vets can check animals and view the zoo, but can't manage staff or habitats
-        return action.equals("MEDICAL_CHECK") || 
-               action.equals("VIEW_ZOO") || 
-               action.equals("GIVE_MEDICINE");
+        return action.equals(PERFORM_MEDICAL_CHECK) || 
+               action.equals(VIEW_ZOO) || 
+               action.equals(GIVE_MEDICINE);
     }
 }
