@@ -1,35 +1,56 @@
 package com.zoo.models.staff_roles;
 
-import com.zoo.staff_interface.IStaff;
-
-public class Manager implements IStaff {
-    private String id, name, username, password;
- 
-    public static final String ROLE = "Manager";
-    public static final String ADD_ANIMAL = "ADD_ANIMAL";
-    public static final String REMOVE_ANIMAL = "REMOVE_ANIMAL";
-    public static final String VIEW_REPORT = "VIEW_REPORT";
-
-    public Manager(String id, String name, String username, String password) {
-        this.id = id;
-        this.name = name;
-        this.username = username;
-        this.password = password;
-    }
-
-    @Override public String getId() { return id; }
-    @Override public String getUsername() { return username; }
-    @Override public String getPassword() { return password; }
-    @Override public String getRole() { return "Manager"; }
+public class Manager extends Staff {
+    private float salary;
 
     @Override
     public boolean can(String action) {
-        // Manager can do everything!
-        if(action.equals(ADD_ANIMAL) || 
-           action.equals(REMOVE_ANIMAL) || 
-           action.equals(VIEW_REPORT)) {
-            return true;
-        }   
-        return false; 
+        // TODO Auto-generated method stub
+        return true;
     }
+
+    // Constructor
+    public Manager(Staff s, float salary) {
+        
+        super(s.getId(), s.getName(), s.getUsername(), s.getPassword());
+        this.setSalary(salary);
+    }
+
+    public float getSalary() {
+        return salary;
+    }
+
+    public void setSalary(float salary) {
+        if(salary < 1000)
+        {
+            System.out.println("error: more salary expected");
+        }else
+        {
+            this.salary = salary;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Manager [salary=" + salary + ", getSalary()=" + getSalary() + ", getId()=" + getId()
+                + ", getUsername()=" + getUsername() + ", getName()=" + getName() + ", isActive()=" + isActive()
+                + ", toString()=" + super.toString() + "]";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Manager other = (Manager) obj;
+        if (Float.floatToIntBits(salary) != Float.floatToIntBits(other.salary))
+            return false;
+        return true;
+    }
+
 }

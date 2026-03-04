@@ -2,7 +2,6 @@ package com.zoo.models;
 public class Food {
     private int id;
     private String name;
-    private String type;
     private double stock;
     private String expiryDate;
     private double costPerUnit;
@@ -12,7 +11,6 @@ public class Food {
         this.id = nextId;
         nextId++;
         this.name = name;
-        this.type = type;
         this.stock = stock;
         this.expiryDate = expiryDate;
         this.costPerUnit = costPerUnit;
@@ -21,7 +19,6 @@ public class Food {
     public int getId() { return id; }
     public double getStock() {return stock; }
     public String getName() { return name;}
-    public String getType() { return type; }
     public String getExpiryDate() { return expiryDate; }
     public double getCostPerUnit() { return costPerUnit; }
     public static int getNextId(){ return nextId; }
@@ -42,13 +39,11 @@ public class Food {
         }
     }
 
-
     @Override
     public String toString() {
             return "Food{" +
                     "id=" + id +
                     ", name='" + name + '\'' +
-                    ", type='" + type + '\'' +
                     ", stock=" + stock +
                     ", expiryDate='" + expiryDate + '\'' +
                     ", costPerUnit=" + costPerUnit +

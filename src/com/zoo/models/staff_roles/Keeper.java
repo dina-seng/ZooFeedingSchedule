@@ -1,30 +1,74 @@
 package com.zoo.models.staff_roles;
 
-import com.zoo.staff_interface.IStaff;
+import com.zoo.interfaces.IHabitat;
+import com.zoo.services.Zoo;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Keeper implements IStaff {
-    private String id, name, username, password;
-
-    public static final String ROLE = "Keeper";
-    public static final String FEED_ANIMAL = "FEED_ANIMAL";
-    public static final String VIEW_HABITAT = "VIEW_HABITAT";
-
-    public Keeper(String id, String name, String username, String password) {
-        this.id = id;
-        this.name = name;
-        this.username = username;
-        this.password = password;
-    }
-
-    @Override public String getId() { return id; }
-    @Override public String getUsername() { return username; }
-    @Override public String getPassword() { return password; }
-    @Override public String getRole() { return "Keeper"; }
+public class Keeper extends Staff {
+    private float salary;
+    private List<IHabitat> assignedHabitats = new ArrayList<>();
 
     @Override
     public boolean can(String action) {
-        // Keeper can only feed or view
-        return action.equals(FEED_ANIMAL) || action.equals(VIEW_HABITAT);
+        // TODO Auto-generated method stub
+        if(action.equals(Zoo.VIEW_HABITAT) || action.equals(Zoo.ANIMAL_MANAGE))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    // Constructor
+    public Keeper(String id, String name, String username, String password, float salary) {
+        super(id, name, username, password);
+        setSalary(salary);
+    }
+
+    public float getSalary() {
+        return salary;
+    }
+
+    public void setSalary(float salary) {
+        if(salary < 300)
+        {
+            System.out.println("error: more salary expected");
+        }else
+        {
+            this.salary = salary;
+        }
+    }
+
+    public boolean managesHabitat(IHabitat habitat) {
+        return assignedHabitats.contains(habitat);
+    }
+
+    public void assignHabitat(IHabitat habitat) {
+        if (!assignedHabitats.contains(habitat)) {
+            assignedHabitats.add(habitat);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Keeper [salary=" + salary + ", getSalary()=" + getSalary() + ", getId()=" + getId()
+                + ", getUsername()=" + getUsername() + ", getName()=" + getName() + ", isActive()=" + isActive()
+                + ", toString()=" + super.toString() + "]";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Keeper other = (Keeper) obj;
+        return Float.floatToIntBits(this.salary) == Float.floatToIntBits(other.salary);
     }
 }
 

@@ -1,10 +1,8 @@
 package com.zoo.models;
-import java.util.Objects;
 
 public class Animal {
-    private int id;
+    private int id, age;
     private String name;
-    private int age;
     private String species;
     private double weight;
     private static int nextId = 1;
@@ -12,12 +10,13 @@ public class Animal {
     public Animal(String name, int age, String species, double weight) {
         this.id = nextId;
         nextId++;
-        this.name = name;
-        this.age = age;
-        this.species = species;
-        this.weight = weight;
+        setName(name);
+        setAge(age);
+        setSpecies(species);
+        setWeight(weight);
     }
 
+    // Getters
     public String getName() { return name; } 
     public int getAnimalID() { return id; }
     public int getAge() { return age; }
@@ -25,11 +24,32 @@ public class Animal {
     public double getWeight() { return weight; }
     public static int getNextId() { return nextId;}
 
+    // Helpers
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    // Setters
+    public void setName(String name) {
+        if (isBlank(name)) this.name = "Unknown";
+        else this.name = name;
+    }
+
     public void setAge(int age) {
         if (age <= 0) {
-            return;
+            this.age = 0;
         }
-         this.age = age;
+        this.age = age;
+    }
+
+    public void setSpecies(String species) {
+        if (isBlank(species)) this.species = "Unknown";
+        else this.species = species;
+    }
+
+    public void setWeight(double weight) {
+        if ( weight <= 0 ) this.weight = 0;
+        else this.weight = weight;
     }
 
     public boolean matchesSpecies(String species) {
@@ -40,8 +60,7 @@ public class Animal {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Animal animal = (Animal) o;
-        return id == animal.id && age == animal.age && Double.compare(weight, animal.weight) == 0
-                && Objects.equals(name, animal.name) && Objects.equals(species, animal.species);
+        return id == animal.id;
     }
 
     @Override
@@ -54,4 +73,6 @@ public class Animal {
                 ", weight=" + weight +
                 '}' + "\n";
     }
+
+    
 }

@@ -1,12 +1,12 @@
 package com.zoo.services;
 
-import com.zoo.staff_interface.IStaff; // Import the interface
+import com.zoo.interfaces.IStaff;
 
 public class Schedule {
     private IStaff assignedStaff; 
     private String date;
     private String time;
-    private boolean isCompleted = false;
+    private boolean isCompleted;
     private String feedingNotes;
 
     public Schedule(IStaff staff, String date, String time) {
@@ -14,6 +14,7 @@ public class Schedule {
         this.date = date;
         this.time = time;
         this.feedingNotes = "Standard Feeding";
+        this.isCompleted = false;
     }
 
     public Schedule(IStaff staff, String date, String time, String note) {
