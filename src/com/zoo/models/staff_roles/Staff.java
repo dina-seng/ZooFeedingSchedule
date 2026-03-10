@@ -2,25 +2,29 @@ package com.zoo.models.staff_roles;
 import com.zoo.interfaces.IStaff;
 import java.util.Objects;
 
-public class Staff implements IStaff{
+public abstract class Staff implements IStaff{
     private String id, name, username, password;
     private boolean status;
 
     // Constructor
-    public Staff(String id, String name,String username, String password) {
-        setId(id);
-        setName(name);
-        setUsername(username);
-        setPassword(password);
+    public Staff(String id, String name, String username, String password) {
+        this.id = validateId(id);
+        this.name = validateName(name);
+        this.username = validateUsername(username);
+        this.password = validatePassword(password);
         this.status = true;
     }
 
     protected String getPassword() { return password; }
 
     // Getters
+    @Override
     public String getId(){ return id; }
+    @Override
     public String getUsername(){return username;}
+    @Override
     public String getName(){return name;}
+    @Override
     public boolean isActive() { return status; }
 
     // Checking password
@@ -36,28 +40,23 @@ public class Staff implements IStaff{
 
     // Setters
     public void setId(String id) {
-        if(isBlank(id)) this.id = "Unknown";
-        else this.id = id.trim();
+        this.id = validateId(id);
     }
 
     public void setName(String name) {
-        if(isBlank(name)) this.name = "NA";
-        else this.name = name.trim();
+        this.name = validateName(name);
     }
 
     public void setUsername(String username) {
-        if(isBlank(username)) this.username = "NA";
-        else this.username = username;
+        this.username = validateUsername(username);
     }
 
     public void setPassword(String password) {
-        String pw = (password == null) ? "" : password;
-        if (pw.length() < 4) this.password = "0000";
-        else this.password = pw;
+        this.password = validatePassword(password);
     }
 
-    public void setStatus(boolean stutus) {
-        this.status = stutus;
+    public void setStatus(boolean status) {
+        this.status = status;
     } 
 
     @Override
@@ -67,21 +66,38 @@ public class Staff implements IStaff{
     }
 
     @Override
-    public boolean can(String action) {
-        // TODO Auto-generated method stub
-        return false;
-    }
+    public abstract boolean can(String action);
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
         final Staff other = (Staff) obj;
         return Objects.equals(this.id, other.id);
+    }
+
+    private String validateId(String id) {
+        return isBlank(id) ? "Unknown" : id.trim();
+    }
+
+    private String validateName(String name) {
+        return isBlank(name) ? "NA" : name.trim();
+    }
+
+    private String validateUsername(String username) {
+        return isBlank(username) ? "NA" : username;
+    }
+
+    private String validatePassword(String password) {
+        String pw = (password == null) ? "" : password;
+        if (pw.isEmpty()) throw new IllegalArgumentException("Password required");
+        if (pw.length() < 8) throw new IllegalArgumentException("Password must be at least 8 characters");
+        pw = pw.trim();
+        return pw;
     }
 
 }

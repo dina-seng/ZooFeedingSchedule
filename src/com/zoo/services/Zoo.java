@@ -4,17 +4,20 @@ import com.zoo.interfaces.IHabitat;
 import com.zoo.interfaces.IStaff;
 import com.zoo.models.Animal;
 import com.zoo.models.Food;
+import com.zoo.models.habitat_types.Forest;
+import com.zoo.models.habitat_types.Habitat;
+import com.zoo.models.habitat_types.Ocean;
+import com.zoo.models.habitat_types.Savannah;
 import com.zoo.models.staff_roles.Keeper;
 import com.zoo.models.staff_roles.Manager;
-import com.zoo.models.staff_roles.Staff;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Zoo {
     public static final String ANIMAL_MANAGE = "ANIMAL_MANAGE";
     public static final String VIEW_REPORT = "VIEW_REPORT";
-    public static final String VIEW_HABITAT = "VIEW_HABITAT";
-    public static final String CREATE_STAFF = "CREATE_STAFF";
+    public static final String STAFF_MANAGE = "STAFF_MANAGE";
+    public static final String HABITAT_MANAGE = "HABITAT_MANAGE";
     public static final String SCHEDULE_MANAGE = "SCHEDULE_MANAGE";
     public static final String FOOD_MANAGE = "FOOD_MANAGE";
 
@@ -34,14 +37,14 @@ public class Zoo {
 
     // -- Constructor -- //
     public Zoo(String zooName, String address) {
-        setName(zooName);
-        setAddress(address);
-        setDefualtManager();
+        this.zooName = zooName.trim();
+        this.address = address.trim();
+        setDefaultManager();
         loggedInUser = null;
         lastMessage = "Zoo Created. Default: admin1 / 12345";
     }
 
-    public String getShopName() { return zooName; }
+    public String getZooName() { return zooName; }
     public String getAddress() { return address; }
     public String getLastMessage() { return lastMessage; }
     public List<IHabitat> getHabitats() { return habitats; }
@@ -50,12 +53,12 @@ public class Zoo {
     public boolean isStaffLoggedIn() { return loggedInUser != null; }
     public IStaff getLoggedInStaff() { return loggedInUser; }
 
-    // -- Set Default Manager  -- //
-    private void setDefualtManager() {
-
-        Staff s = new Staff("M001", "Admin", "admin1",  "12345");
-        Manager admin = new Manager(s, 1500);
-        users.add(admin);
+    // Set Default Manager
+    private void setDefaultManager() {
+        Manager admin = new Manager("M001", "Admin", "admin1",  "12345678", 1500);
+        Keeper k = new Keeper("K001", "Keeper", "keeper1",  "12345678", 1500);
+        registerUser(admin);
+        registerUser(k);
     }
 
     public void setName(String name) {
@@ -84,7 +87,7 @@ public class Zoo {
         return true;
     }
 
-    // --- LOGIN SYSTEM (Requirement #4) ---
+    // --- LOGIN SYSTEM ---
     public void login(String username, String password) {
 
         if (isBlank(username) || password == null) {
@@ -121,11 +124,11 @@ public class Zoo {
         }
     }
     
-    // Create staff
+    // Manage staff
     public void createStaff(String staffId, String fullName, String position,
-                            String username, String password) {
+                            String username, String password, float salary) {
 
-        if (!requirePermission(CREATE_STAFF)) return;
+        if (!requirePermission(STAFF_MANAGE)) return;
 
         if (isBlank(staffId) || isBlank(username)) {
             setLastMessage("Cannot create staff: staffId/username is empty.");
@@ -140,23 +143,41 @@ public class Zoo {
             }
         }
 
-        if(position.equals("Manager"))
+        if(position.equalsIgnoreCase("Manager"))
         {
-            Staff s = new Staff(staffId, fullName, username, password);
-            users.add(new Manager(s,2000));
+            users.add(new Manager(staffId, fullName, username, password, salary));
             setLastMessage("Manager created successfully.");
-        }else if(position.equals("Keeper"))
+        }else if(position.equalsIgnoreCase("Keeper"))
         {
-            users.add(new Keeper(staffId, fullName, username, password, 500));
+            users.add(new Keeper(staffId, fullName, username, password, salary));
             setLastMessage("Keeper created successfully.");
         }
+    }
+
+    public void removeStaff(String staffId) {
+
+        if (!requirePermission(STAFF_MANAGE)) return;
+
+        if (isBlank(staffId)) {
+            setLastMessage("staffId is empty.");
+            return;
+        }
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getId().equalsIgnoreCase(staffId.trim())) {
+                String name = users.get(i).getUsername();
+                users.remove(i);
+                setLastMessage("Staff " + name + " removed successfully.");
+                return;
+            }
+        }
+        setLastMessage("Staff not found.");
     }
 
     // Manage animals
     public void addAnimalToHabitat(Animal animal, IHabitat habitat) {
         if (!requirePermission(ANIMAL_MANAGE)) return;
 
-        if (!canAccessHabitat(habitat)) {
+        if (canAccessHabitat(habitat)) {
             setLastMessage("You are not assigned to this habitat.");
             return;
         }
@@ -171,7 +192,7 @@ public class Zoo {
             return;
         }
 
-        if (!canAccessHabitat(habitat)) {
+        if (canAccessHabitat(habitat)) {
             setLastMessage("You are not assigned to this habitat.");
             return;
         }
@@ -194,7 +215,7 @@ public class Zoo {
     public void feedHabitat(IHabitat habitat, int foodId, double amount) {
         if (!requirePermission(FOOD_MANAGE)) return;
 
-        if (!canAccessHabitat(habitat)) {
+        if (canAccessHabitat(habitat)) {
             setLastMessage("You are not assigned to this habitat.");
             return;
         }
@@ -226,7 +247,7 @@ public class Zoo {
             return;
         }
 
-        if (!canAccessHabitat(habitat)) {
+        if (canAccessHabitat(habitat)) {
             setLastMessage("You are not assigned to this habitat.");
             return;
         }
@@ -235,14 +256,14 @@ public class Zoo {
         setLastMessage("Schedule added.");
     }
 
-    public void removeScheduleToHabitat(Schedule schedule, IHabitat habitat) {
+    public void removeScheduleFromHabitat(Schedule schedule, IHabitat habitat) {
 
         if (!requirePermission(SCHEDULE_MANAGE)) {
             setLastMessage("Permission denied: cannot manage schedule.");
             return;
         }
 
-        if (!canAccessHabitat(habitat)) {
+        if (canAccessHabitat(habitat)) {
             setLastMessage("Permission denied: not your habitat.");
             return;
         }
@@ -262,12 +283,12 @@ public class Zoo {
     }
 
     public void viewHabitatSchedules(IHabitat habitat) {
-        if (!requirePermission(VIEW_HABITAT)) {
+        if (!requirePermission(HABITAT_MANAGE)) {
             setLastMessage("Permission denied.");
             return;
         }
 
-        if (!canAccessHabitat(habitat)) {
+        if (canAccessHabitat(habitat)) {
             setLastMessage("You are not assigned to this habitat.");
             return;
         }
@@ -280,6 +301,37 @@ public class Zoo {
             System.out.println(index + ". " + s);
             index++;
         }
+    }
+
+    // Manage habitats
+    public void createHabitat(String type, Food food) {
+        if (!requirePermission(HABITAT_MANAGE)) return;
+
+        Habitat h = defineHabitats(type, food);
+        if(h != null) habitats.add(h);
+        setLastMessage("Habitat created successfully.");
+    }
+
+    public void assignHabitatToKeeper(String staffId, IHabitat habitat) {
+        if (!requirePermission(STAFF_MANAGE)) return;
+
+        if (isBlank(staffId)) {
+            setLastMessage("Staff ID cannot be empty.");
+            return;
+        }
+
+        for (IStaff staff : users) {
+            if (staff.getId().equalsIgnoreCase(staffId.trim())) {
+                try {
+                    staff.assignHabitat(habitat);
+                    setLastMessage("Habitat '" + habitat.getName() + "' assigned to '" + staff.getUsername() + "'.");
+                } catch (UnsupportedOperationException e) {
+                    setLastMessage(staff.getUsername() + " cannot be assigned habitats.");
+                }
+                return;
+            }
+        }
+        setLastMessage("Staff not found.");
     }
 
     // Helper methods
@@ -314,9 +366,22 @@ public class Zoo {
     }
 
     private boolean canAccessHabitat(IHabitat habitat) {
-        if (loggedInUser instanceof Keeper keeper) {
-            return keeper.managesHabitat(habitat);
-        }
-        return true; 
+        return !loggedInUser.canAccessHabitat(habitat);
     }
+
+    private Habitat defineHabitats(String type,  Food food) {
+        Habitat newHabitat = null;
+        if (type.equals("forest")) {
+            newHabitat = new Forest(null, food);
+        } else if (type.equals("ocean")) {
+            newHabitat = new Ocean( null, food );
+        } else if (type.equals("savannah")) {
+            newHabitat = new Savannah(null, food);
+        } else {
+            setLastMessage("Unknown habitat type. Use: forest, ocean, savannah.");
+            return null;
+        }
+        return newHabitat;
+    }
+
 }

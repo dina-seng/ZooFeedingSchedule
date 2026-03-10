@@ -18,7 +18,7 @@ public class Animal {
 
     // Getters
     public String getName() { return name; } 
-    public int getAnimalID() { return id; }
+    public int getId() { return id; }
     public int getAge() { return age; }
     public String getSpecies() { return species; }
     public double getWeight() { return weight; }
@@ -36,10 +36,7 @@ public class Animal {
     }
 
     public void setAge(int age) {
-        if (age <= 0) {
-            this.age = 0;
-        }
-        this.age = age;
+        this.age = (age > 0) ? age : 0;
     }
 
     public void setSpecies(String species) {
@@ -52,8 +49,8 @@ public class Animal {
         else this.weight = weight;
     }
 
-    public boolean matchesSpecies(String species) {
-        return this.species.equals(species);
+    public boolean matchesSpeciesIgnoreCase(String species) {
+        return this.species != null && this.species.equalsIgnoreCase(species);
     }
 
     @Override

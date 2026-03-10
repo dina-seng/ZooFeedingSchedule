@@ -1,19 +1,28 @@
 package com.zoo.models.staff_roles;
+import com.zoo.interfaces.IHabitat;
 
 public class Manager extends Staff {
     private float salary;
 
     @Override
     public boolean can(String action) {
-        // TODO Auto-generated method stub
         return true;
     }
 
+    @Override
+    public boolean canAccessHabitat(IHabitat habitat) {
+        return true;
+    }
+
+    @Override
+    public void assignHabitat(IHabitat habitat) {
+        throw new UnsupportedOperationException("Managers cannot be assigned habitats.");
+    }
+
     // Constructor
-    public Manager(Staff s, float salary) {
-        
-        super(s.getId(), s.getName(), s.getUsername(), s.getPassword());
-        this.setSalary(salary);
+    public Manager(String id, String name, String username, String password, float salary) {
+        super(id, name, username, password);
+        setSalary(salary);
     }
 
     public float getSalary() {
@@ -39,18 +48,11 @@ public class Manager extends Staff {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
+        if (this == obj) return true;
+        if (!(obj instanceof Manager)) return false;
+
         Manager other = (Manager) obj;
-        if (Float.floatToIntBits(salary) != Float.floatToIntBits(other.salary))
-            return false;
-        return true;
+        return getId().equals(other.getId());
     }
 
 }

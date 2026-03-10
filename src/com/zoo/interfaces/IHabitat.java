@@ -11,7 +11,8 @@ public interface IHabitat {
     void addAnimal(Animal animal);
     void removeAnimal(Animal animal);   
     void addSchedule(Schedule schedule);
-    void removeSchedule(Schedule schedule);   
-    List<Animal> getAnimals();
+    void removeSchedule(Schedule schedule);
+    void showAnimals();
     List<Schedule> getFeedingTimes();
+    List<Animal> getAnimals();
 }

@@ -8,4 +8,6 @@ public interface IStaff {
     boolean isActive();
     
     boolean can(String action);
+    boolean canAccessHabitat(IHabitat habitat);
+    void assignHabitat(IHabitat habitat);
 }

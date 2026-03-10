@@ -7,9 +7,8 @@ public class Food {
     private double costPerUnit;
     private static int nextId = 1;
 
-    public Food(String name, String type, double stock, String expiryDate, double costPerUnit) {
-        this.id = nextId;
-        nextId++;
+    public Food(String name, double stock, String expiryDate, double costPerUnit) {
+        this.id = nextId++;
         this.name = name;
         this.stock = stock;
         this.expiryDate = expiryDate;

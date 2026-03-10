@@ -11,12 +11,7 @@ public class Keeper extends Staff {
 
     @Override
     public boolean can(String action) {
-        // TODO Auto-generated method stub
-        if(action.equals(Zoo.VIEW_HABITAT) || action.equals(Zoo.ANIMAL_MANAGE))
-        {
-            return true;
-        }
-        return false;
+        return action.equals(Zoo.ANIMAL_MANAGE) || action.equals(Zoo.VIEW_REPORT) || action.equals(Zoo.HABITAT_MANAGE);
     }
 
     // Constructor
@@ -39,10 +34,16 @@ public class Keeper extends Staff {
         }
     }
 
+    @Override
+    public boolean canAccessHabitat(IHabitat habitat) {
+        return managesHabitat(habitat);
+    }
+
     public boolean managesHabitat(IHabitat habitat) {
         return assignedHabitats.contains(habitat);
     }
 
+    @Override
     public void assignHabitat(IHabitat habitat) {
         if (!assignedHabitats.contains(habitat)) {
             assignedHabitats.add(habitat);
@@ -58,17 +59,10 @@ public class Keeper extends Staff {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Keeper other = (Keeper) obj;
-        return Float.floatToIntBits(this.salary) == Float.floatToIntBits(other.salary);
+        if (this == obj) return true;
+        if (!(obj instanceof Keeper other)) return false;
+
+        return getId().equals(other.getId());
     }
 }
 

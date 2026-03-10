@@ -1,45 +1,48 @@
 package com.zoo.services;
 
 import com.zoo.interfaces.IStaff;
+import com.zoo.models.staff_roles.Keeper;
 
 public class Schedule {
-    private IStaff assignedStaff; 
+
+    private int id;
+    private IStaff assignedKeeper;
     private String date;
     private String time;
     private boolean isCompleted;
-    private String feedingNotes;
+    private static int nextId = 1;
 
-    public Schedule(IStaff staff, String date, String time) {
-        this.assignedStaff = staff;
+    public Schedule(IStaff keeper, String date, String time) {
+        this.id = nextId++;
+        this.assignedKeeper = keeper;
         this.date = date;
         this.time = time;
-        this.feedingNotes = "Standard Feeding";
         this.isCompleted = false;
     }
 
-    public Schedule(IStaff staff, String date, String time, String note) {
-        this.assignedStaff = staff;
-        this.date = date;
-        this.time = time;
-        this.feedingNotes = note;
+    public void completeTask() {
+        isCompleted = true;
     }
 
     // Getters
-    public IStaff getAssignedStaff() { return assignedStaff; }
+    public int getId() { return id; }
+    public IStaff getAssignedKeeper() { return assignedKeeper; }
     public String getDate() { return date; }
-    public String getTime() { return time; }
+    public String getTime() { return time; }        
     public boolean isCompleted() { return isCompleted; }
 
-    public void completeTask() {
-        this.isCompleted = true;
-    }
+    // Setters
+    public void setAssignedKeeper(Keeper keeper) { this.assignedKeeper = keeper; }
+    public void setDate(String date) { this.date = date; }
+    public void setTime(String time) { this.time = time; }
+
 
     @Override
     public String toString() {
-        // Use getUsername() from the interface
-        return "Feeding Schedule [" +
-               "Staff=" + assignedStaff.getUsername() + 
-               ", Time=" + date + " " + time +
-               ", Status=" + (isCompleted ? "Done" : "Pending") + "]";
+        return "Schedule: [" +
+                "Keeper=" + assignedKeeper.getUsername() +
+                ", Time=" + date + " " + time +
+                ", Status=" + (isCompleted ? "Done" : "Pending") +
+                "]";
     }
 }
