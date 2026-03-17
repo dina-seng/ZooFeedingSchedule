@@ -1,8 +1,8 @@
 package com.zoo.main;
 
-import com.zoo.interfaces.IHabitat;
-import com.zoo.interfaces.IStaff;
 import com.zoo.models.Animal;
+import com.zoo.models.habitat_types.Habitat;
+import com.zoo.models.staff_roles.Staff;
 import com.zoo.models.Food;
 import com.zoo.models.staff_roles.Manager;
 import com.zoo.services.Schedule;
@@ -101,7 +101,7 @@ public class ZooMain {
 
                                 System.out.print("Habitat name: ");
                                 String habName = sc.nextLine().trim();
-                                for (IHabitat h : zoo.getHabitats()) {
+                                for (Habitat h : zoo.getHabitats()) {
                                     if (h.getName().equalsIgnoreCase(habName)) {
                                         zoo.viewHabitatSchedules(h);
                                         break;
@@ -154,7 +154,7 @@ public class ZooMain {
 
                                 System.out.print("Habitat name: ");
                                 String habName = sc.nextLine();
-                                for (IHabitat h : zoo.getHabitats()) {
+                                for (Habitat h : zoo.getHabitats()) {
                                     if (h.getName().equalsIgnoreCase(habName)) {
                                         zoo.viewHabitatSchedules(h);
                                         break;
@@ -254,7 +254,7 @@ public class ZooMain {
                     break;
                 }
 
-                IHabitat habitat = zoo.getHabitats().get(0);
+                Habitat habitat = zoo.getHabitats().get(0);
                 zoo.addAnimalToHabitat(animal, habitat);
                 System.out.println(zoo.getLastMessage());
                 break;
@@ -267,10 +267,10 @@ public class ZooMain {
                 System.out.print("Habitat name: ");
                 String habitatName = sc.nextLine();
 
-                IHabitat selectedHabitat = null;
+                Habitat selectedHabitat = null;
                 Animal findAnimal = null;
 
-                for (IHabitat h : zoo.getHabitats()) {
+                for (Habitat h : zoo.getHabitats()) {
                     if (h.getName().equalsIgnoreCase(habitatName)) {
                         selectedHabitat = h;
                         for (Animal a : h.getAnimals()) {
@@ -316,7 +316,7 @@ public class ZooMain {
                     break;
                 }
                 
-                IStaff keeper = zoo.getLoggedInStaff();
+                Staff keeper = zoo.getLoggedInStaff();
                 if (!(keeper instanceof com.zoo.models.staff_roles.Keeper)) {
                     System.out.println("Only keepers can be assigned to schedules.");
                     break;
@@ -333,8 +333,8 @@ public class ZooMain {
                 System.out.print("Habitat name: ");
                 String habitatName = sc.nextLine().trim();
                 
-                IHabitat habitat = null;
-                for (IHabitat h : zoo.getHabitats()) {
+                Habitat habitat = null;
+                for (Habitat h : zoo.getHabitats()) {
                     if (h.getName().equalsIgnoreCase(habitatName)) {
                         habitat = h;
                         break;
@@ -361,7 +361,7 @@ public class ZooMain {
                 int scheduleId = sc.nextInt();
                 sc.nextLine();
                 
-                for (IHabitat h : zoo.getHabitats()) {
+                for (Habitat h : zoo.getHabitats()) {
                     for (Schedule s : h.getFeedingTimes()) {
                         if (s.getId() == scheduleId) {
                             zoo.removeScheduleFromHabitat(s, h);
@@ -460,7 +460,7 @@ public class ZooMain {
             case 2: {
                 System.out.print("Habitat name (eg: Ocean1): ");
                 String habitatName = sc.nextLine().trim();
-                for (IHabitat h : zoo.getHabitats()) {
+                for (Habitat h : zoo.getHabitats()) {
                     if (h.getName().equals(habitatName)) {
                         h.showAnimals();
                         break;
@@ -477,8 +477,8 @@ public class ZooMain {
                 System.out.print("Habitat Name: ");
                 String habitatName = sc.nextLine().trim();
                 
-                IHabitat selectedHabitat = null;
-                for (IHabitat h : zoo.getHabitats()) {
+                Habitat selectedHabitat = null;
+                for (Habitat h : zoo.getHabitats()) {
                     if (h.getName().equalsIgnoreCase(habitatName)) {
                         selectedHabitat = h;
                         break;

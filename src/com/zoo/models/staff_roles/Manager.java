@@ -1,8 +1,15 @@
 package com.zoo.models.staff_roles;
-import com.zoo.interfaces.IHabitat;
+import com.zoo.models.habitat_types.Habitat;
 
 public class Manager extends Staff {
     private float salary;
+
+    
+    // Constructor
+    public Manager(String id, String name, String username, String password, float salary) {
+        super(id, name, username, password);
+        setSalary(salary);
+    }
 
     @Override
     public boolean can(String action) {
@@ -10,19 +17,13 @@ public class Manager extends Staff {
     }
 
     @Override
-    public boolean canAccessHabitat(IHabitat habitat) {
+    public boolean canAccessHabitat(Habitat habitat) {
         return true;
     }
 
     @Override
-    public void assignHabitat(IHabitat habitat) {
+    public void assignHabitat(Habitat habitat) {
         throw new UnsupportedOperationException("Managers cannot be assigned habitats.");
-    }
-
-    // Constructor
-    public Manager(String id, String name, String username, String password, float salary) {
-        super(id, name, username, password);
-        setSalary(salary);
     }
 
     public float getSalary() {

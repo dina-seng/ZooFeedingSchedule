@@ -1,8 +1,14 @@
 package com.zoo.models.staff_roles;
 import com.zoo.interfaces.IStaff;
+import com.zoo.models.habitat_types.Habitat;
 import java.util.Objects;
 
-public abstract class Staff implements IStaff{
+@FunctionalInterface
+interface HabitatAccess {
+    boolean canAccessHabitat(Habitat habitat);
+}
+
+public abstract class Staff implements IStaff, HabitatAccess{
     private String id, name, username, password;
     private boolean status;
 

@@ -1,13 +1,13 @@
 package com.zoo.models.staff_roles;
 
-import com.zoo.interfaces.IHabitat;
+import com.zoo.models.habitat_types.Habitat;
 import com.zoo.services.Zoo;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Keeper extends Staff {
     private float salary;
-    private List<IHabitat> assignedHabitats = new ArrayList<>();
+    private List<Habitat> assignedHabitats = new ArrayList<>();
 
     @Override
     public boolean can(String action) {
@@ -35,16 +35,12 @@ public class Keeper extends Staff {
     }
 
     @Override
-    public boolean canAccessHabitat(IHabitat habitat) {
-        return managesHabitat(habitat);
-    }
-
-    public boolean managesHabitat(IHabitat habitat) {
+    public boolean canAccessHabitat(Habitat habitat) {
         return assignedHabitats.contains(habitat);
     }
 
     @Override
-    public void assignHabitat(IHabitat habitat) {
+    public void assignHabitat(Habitat habitat) {
         if (!assignedHabitats.contains(habitat)) {
             assignedHabitats.add(habitat);
         }

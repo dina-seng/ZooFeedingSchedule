@@ -1,5 +1,7 @@
 package com.zoo.interfaces;
 
+import com.zoo.models.habitat_types.Habitat;
+
 public interface IStaff {
     String getId();
     String getUsername();
@@ -8,6 +10,5 @@ public interface IStaff {
     boolean isActive();
     
     boolean can(String action);
-    boolean canAccessHabitat(IHabitat habitat);
-    void assignHabitat(IHabitat habitat);
+    void assignHabitat(Habitat habitat);
 }
