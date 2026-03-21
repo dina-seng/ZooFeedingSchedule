@@ -6,12 +6,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class MySqlDatabaseConnection {
+public class MySqlDatabaseConnection { 
     private static Connection connection = null; 
-    private static final String URL = "jdbc:mysql://localhost:3306/hr";
+    
+    // Update with your database URL, username, and password
+    private static final String URL = "jdbc:mysql://127.0.0.1:3306/ZooFeedingSchedule"; 
+
 
     private static final String USERNAME = "root"; 
-    private static final String PASSWORD = "&&&&";
+    private static final String PASSWORD = "dyy007kh";
 
     public static Connection getConnection() {
         if (connection == null) {
@@ -72,7 +75,7 @@ public class MySqlDatabaseConnection {
         } else {
             System.out.println("Failed to establish connection.");
         }
-            String action = "SELECT employee_id, first_name, last_name FROM employees LIMIT 10;";
+            String action = "SELECT * FROM animal LIMIT 10;";
             ResultSet resultSet = MySqlDatabaseConnection.executeQuery(action);
             try {
                 while (resultSet != null && resultSet.next()) {
