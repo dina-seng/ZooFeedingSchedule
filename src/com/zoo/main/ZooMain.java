@@ -1,499 +1,317 @@
 package com.zoo.main;
 
+import com.zoo.exceptions.ZooException;
 import com.zoo.models.Animal;
-import com.zoo.models.habitat_types.Habitat;
-import com.zoo.models.staff_roles.Staff;
 import com.zoo.models.Food;
+import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.staff_roles.Manager;
-import com.zoo.services.Schedule;
 import com.zoo.services.Zoo;
 import java.util.Scanner;
 
 public class ZooMain {
+    private static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
-
-        Scanner sc = new Scanner(System.in);
         Zoo zoo = new Zoo("Safari Zoo", "Phnom Penh");
-        printMainMenu();
-        System.out.print("Choose: ");
-        int choice = sc.nextInt();
-        sc.nextLine();
-        do {
-            if (!zoo.isStaffLoggedIn()) {
-                switch (choice) {
-                    case 1: {
-                        System.out.print("Username: ");
-                        String username = sc.nextLine();
+        boolean running = true;
 
-                        System.out.print("Password: ");
-                        String password = sc.nextLine();
+        System.out.println("Welcome to " + zoo.getZooName() + " Management System");
 
-                        zoo.login(username.trim(), password.trim());
-                        System.out.println(zoo.getLastMessage());
-                        break;
+        while (running) {
+            try {
+                if (!zoo.isStaffLoggedIn()) {
+                    printMainMenu();
+                    System.out.print("Choose: ");
+                    int choice = Integer.parseInt(sc.nextLine());
+
+                    switch (choice) {
+                        case 1 -> handleLogin(zoo);
+                        case 2 -> viewAsGuest(zoo);
+                        case 0 -> {
+                            System.out.println("Goodbye!");
+                            running = false;
+                        }
+                        default -> System.out.println("Invalid choice.");
                     }
-
-                    case 0:
-                        System.out.println("Goodbye!");
-                        break;
-
-                    default:
-                        System.out.println("Invalid choice.");
-                }
-
-            } else {
-
-                if (zoo.getLoggedInStaff() instanceof Manager) {
-                    int mainChoice;
-                    do {
-                        printManagerMenu(zoo);
-                        System.out.print("Choose: ");
-                        mainChoice = sc.nextInt();
-                        sc.nextLine();
-
-                        switch (mainChoice) {
-
-                            case 1: { // Manage Animals
-                                manageAnimals(zoo, sc);
-                                break;
-                            }
-
-                            case 2: { // Manage Schedule
-                                manageSchedule(zoo, sc);
-                                break;
-                            }
-
-                            case 3: { // Manage Staff
-                                manageStaff(zoo, sc);
-                                break;
-                            }
-
-                            case 4: { // Manage Habitats
-                                manageHabitats(zoo, sc);
-                                break;
-                            }
-
-                            case 5: { // Manage Foods
-                                System.out.println("--- Add New Food ---");
-                                System.out.print("Food Name: ");
-                                String foodName = sc.nextLine().trim();
-                                System.out.print("Quantity: ");
-                                int quantity = sc.nextInt();
-                                sc.nextLine();
-                                System.out.print("Expiry date: ");
-                                String expiryDate = sc.nextLine().trim();
-                                System.out.print("CostPerUnit: ");
-                                float cost = sc.nextFloat();
-                                sc.nextLine();
-
-                                Food food = new Food(foodName, quantity, expiryDate, cost);
-                                zoo.addFoodToInventory(food);
-                                System.out.println(zoo.getLastMessage());
-                                break;
-                            }
-
-                            case 6: { // View Habitat Schedule
-                                if (zoo.getHabitats().isEmpty()) {
-                                    System.out.println("No habitats available.");
-                                    break;
-                                }
-
-                                System.out.print("Habitat name: ");
-                                String habName = sc.nextLine().trim();
-                                for (Habitat h : zoo.getHabitats()) {
-                                    if (h.getName().equalsIgnoreCase(habName)) {
-                                        zoo.viewHabitatSchedules(h);
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-
-                            case 7: { // View Zoo Report
-                                zoo.viewZooReport();
-                                break;
-                            }
-
-                            case 8: { // Logout
-                                zoo.logout();
-                                System.out.println(zoo.getLastMessage());
-                                break;
-                            }
-
-                            case 0:
-                                System.out.println("Goodbye!");
-                                choice = 0;
-                                break;
-
-                            default:
-                                System.out.println("Invalid choice.");
-                        }
-                    } while (mainChoice != 0 && mainChoice != 8);
-                    
                 } else {
-                    int mainChoice;
-                    do {
-                        printStaffMenu(zoo);
-                        System.out.print("Choose: ");
-                        mainChoice = sc.nextInt();
-                        sc.nextLine();
-
-                        switch (mainChoice) {
-
-                            case 1: { // Manage Animals
-                                manageAnimals(zoo, sc);
-                                break;
-                            }
-
-                            case 2: { // View Habitat Schedule
-                                if (zoo.getHabitats().isEmpty()) {
-                                    System.out.println("No habitats available.");
-                                    break;
-                                }
-
-                                System.out.print("Habitat name: ");
-                                String habName = sc.nextLine();
-                                for (Habitat h : zoo.getHabitats()) {
-                                    if (h.getName().equalsIgnoreCase(habName)) {
-                                        zoo.viewHabitatSchedules(h);
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-
-                            case 3: { // View Zoo Report
-                                zoo.viewZooReport();
-                                break;
-                            }
-
-                            case 4: { // Logout
-                                zoo.logout();
-                                System.out.println(zoo.getLastMessage());
-                                break;
-                            }
-
-                            case 0:
-                                System.out.println("Goodbye!");
-                                choice = 0;
-                                break;
-
-                            default:
-                                System.out.println("Invalid choice.");
-                        }
-                    } while (mainChoice != 0 && mainChoice != 4);
+                    if (zoo.getLoggedInStaff() instanceof Manager) {
+                        handleManagerFlow(zoo);
+                    } else {
+                        handleStaffFlow(zoo);
+                    }
                 }
+            } catch (NumberFormatException e) {
+                System.err.println("Error: Please enter a valid number.");
+            } catch (Exception e) {
+                System.err.println("An unexpected error occurred: " + e.getMessage());
             }
-
-        } while (choice != 0);
-
+        }
         sc.close();
     }
 
+    // --- Authentication Flow ---
+    private static void handleLogin(Zoo zoo) {
+       try {
+        System.out.println("\n--- Staff Login ---");
+        System.out.print("Enter Email: "); //dina@zoo.com or keeper@zoo.com 
+        String email = sc.nextLine().trim();
+        
+        System.out.print("Enter Password: "); // pw both is 12345
+        String password = sc.nextLine().trim();
+
+        // This now checks MySQL instead of RAM!
+        zoo.login(email, password);
+        
+        System.out.println("Welcome back, " + zoo.getLoggedInStaff().getName() + "!");
+        
+    } catch (ZooException e) {
+        // This catches the error from the DAO or the Login method
+        System.err.println("\n[LOGIN ERROR] " + e.getMessage());
+    }
+    }
+
+    // --- Manager Logic ---
+    private static void handleManagerFlow(Zoo zoo) {
+        printManagerMenu(zoo);
+        System.out.print("Choose: ");
+        try {
+            int choice = Integer.parseInt(sc.nextLine());
+            switch (choice) {
+                case 1 -> manageAnimals(zoo);
+                case 2 -> manageSchedule(zoo);
+                case 3 -> manageStaff(zoo);
+                case 4 -> manageHabitats(zoo);
+                case 5 -> addNewFood(zoo);
+                case 6 -> viewSchedules(zoo);
+                case 7 -> zoo.viewZooReport();
+                case 8 -> viewAllStaffFromDB(zoo); 
+                case 9 -> viewFoodInventoryFromDB(zoo);
+                case 10 -> viewAllStaffFromDB(zoo);
+                case 11 -> {
+                    zoo.logout();
+                    System.out.println("Logged out successfully.");
+                }
+                case 0 -> System.exit(0);
+                default -> System.out.println("Invalid option.");
+            }
+        } catch (Exception e) {
+            System.err.println("Operation Failed: " + e.getMessage());
+        }
+    }
+
+    // --- Staff Logic ---
+    private static void handleStaffFlow(Zoo zoo) {
+        printStaffMenu(zoo);
+        System.out.print("Choose: ");
+        try {
+            int choice = Integer.parseInt(sc.nextLine());
+            switch (choice) {
+                case 1 -> manageAnimals(zoo);
+                case 2 -> viewSchedules(zoo);
+                case 3 -> zoo.viewZooReport();
+                case 4 -> zoo.logout();
+                case 0 -> System.exit(0);
+                default -> System.out.println("Invalid option.");
+            }
+        } catch (Exception e) {
+            System.err.println("Operation Failed: " + e.getMessage());
+        }
+    }
+
+
+    // --- Guest Logic ---
+    private static void viewAsGuest(Zoo zoo) {
+        boolean back = false;
+        while (!back) {
+            System.out.println("\n---  Guest Information Center ---");
+            System.out.println("1) View Our Animals");
+            System.out.println("2) View Habitats");
+            System.out.println("3) View Food Inventory");
+            System.out.println("4) View Feeding Performance");
+            System.out.println("0) Back to Main Menu");
+            System.out.print("Choose: ");
+            
+            try {
+                int choice = Integer.parseInt(sc.nextLine());
+                switch (choice) {
+                    
+                    case 1 -> viewAnimalsGuest(zoo);
+                    case 2 -> viewHabitatsGuest(zoo);
+                    case 3 -> viewFoodInventoryFromDB(zoo); // Reuse your existing method!
+                    case 4 -> viewFeedingPerformance(zoo);
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: Please enter a number.");
+            }
+        }
+    }
+
+    // --- Sub-Modules ---
+
+    private static void manageAnimals(Zoo zoo) throws ZooException {
+        System.out.println("\n1) Add Animal\n2) Remove Animal\n0) Back");
+        int sub = Integer.parseInt(sc.nextLine());
+        
+        if (sub == 1) {
+            System.out.print("Name: "); String name = sc.nextLine();
+            System.out.print("Species: "); String species = sc.nextLine();
+            System.out.print("Age: "); int age = Integer.parseInt(sc.nextLine());
+            System.out.print("Weight: "); double weight = Double.parseDouble(sc.nextLine());
+
+            if (zoo.getHabitats().isEmpty()) throw new ZooException("No habitats exist yet!");
+
+            // Show habitats for selection
+            for (int i = 0; i < zoo.getHabitats().size(); i++) {
+                System.out.println(i + ") " + zoo.getHabitats().get(i).getName());
+            }
+            System.out.print("Select Habitat Index: ");
+            int idx = Integer.parseInt(sc.nextLine());
+            
+            zoo.addAnimalToHabitat(new Animal(name, age, species, weight), zoo.getHabitats().get(idx));
+            System.out.println("Animal added successfully.");
+        }
+    }
+
+    private static void addNewFood(Zoo zoo) throws ZooException {
+        System.out.print("Food Name: "); String name = sc.nextLine();
+        System.out.print("Stock: "); double stock = Double.parseDouble(sc.nextLine());
+        System.out.print("Expiry (YYYY-MM-DD): "); String expiry = sc.nextLine();
+        System.out.print("Cost: "); double cost = Double.parseDouble(sc.nextLine());
+
+        zoo.addFoodToInventory(new Food(name, stock, expiry, cost));
+        System.out.println("Food inventory updated.");
+    }
+
+    private static void manageHabitats(Zoo zoo) throws ZooException {
+        System.out.println("1) Create Habitat\n2) Show Animals in Habitat");
+        int sub = Integer.parseInt(sc.nextLine());
+        
+        if (sub == 1) {
+            System.out.print("Type (forest/ocean/savannah): ");
+            String type = sc.nextLine();
+            // In a real system, you'd select food from inventory here
+            zoo.createHabitat(type, null); 
+            System.out.println("Habitat " + type + " created.");
+        } else if (sub == 2) {
+            System.out.print("Habitat Name: ");
+            String name = sc.nextLine();
+            for(Habitat h : zoo.getHabitats()) {
+                if(h.getName().equalsIgnoreCase(name)) h.showAnimals();
+            }
+        }
+    }
+
+    private static void viewSchedules(Zoo zoo) {
+
+
+        if (zoo.getHabitats().isEmpty()) {
+        System.out.println("No habitats registered in the system.");
+        return;
+        }
+
+        for (Habitat h : zoo.getHabitats()) {
+                try {
+                    // Call your service method
+                    zoo.viewHabitatSchedules(h);
+                } catch (ZooException e) {
+                    // Log the error for this specific habitat and keep going
+                    System.err.println("Could not load schedules for " + h.getName() + ": " + e.getMessage());
+                }
+            }
+    }
+
+
+    private static void viewAllStaffFromDB(Zoo zoo) {
+        System.out.println("\n--- Real-Time Staff Data (MySQL) ---");
+        if (zoo.getUsers().isEmpty()) {
+            System.out.println("No staff found. Check your StaffDAO!");
+        } else {
+            for (Object staffObj : zoo.getUsers()) {
+                // Casting to your IStaff interface or Staff class
+                com.zoo.interfaces.IStaff s = (com.zoo.interfaces.IStaff) staffObj;
+                System.out.println("ID: " + s.getId() + " | Name: " + s.getName() + " | Role: " + s.getClass().getSimpleName());
+            }
+        }
+    }
+
+    private static void viewFoodInventoryFromDB(Zoo zoo) {
+        System.out.println("\n--- Real-Time Food Stock (MySQL) ---");
+        if (zoo.getFoodInventory().isEmpty()) {
+            System.out.println("Inventory empty. Did you run the SQL Insert?");
+        } else {
+            System.out.printf("%-5s | %-15s | %-10s | %-12s\n", "ID", "Name", "Stock", "Expiry");
+            System.out.println("---------------------------------------------------------");
+            for (Food f : zoo.getFoodInventory()) {
+                System.out.printf("%-5d | %-15s | %-10.2f | %-12s\n", 
+                    f.getId(), f.getName(), f.getStock(), f.getExpiryDate());
+            }
+        }
+    }
+
+    private static void viewAnimalsGuest(Zoo zoo) {
+        System.out.println("\n---  Our Amazing Animals ---");
+        if (zoo.getHabitats().isEmpty()) {
+            System.out.println("The animals are currently resting. (No data in DB)");
+        } else {
+            System.out.printf("%-15s | %-15s | %-5s | %-10s\n", "Name", "Species", "Age", "Habitat");
+            System.out.println("------------------------------------------------------------");
+            for (Habitat h : zoo.getHabitats()) {
+                for (Animal a : h.getAnimals()) {
+                    System.out.printf("%-15s | %-15s | %-5d | %-10s\n", 
+                        a.getName(), a.getSpecies(), a.getAge(), h.getName());
+                }
+            }
+        }
+    }
+
+    private static void viewHabitatsGuest(Zoo zoo) {
+        System.out.println("\n---  Our Habitats ---");
+        if (zoo.getHabitats().isEmpty()) {
+            System.out.println("No habitats found in the database.");
+        } else {
+            for (Habitat h : zoo.getHabitats()) {
+                System.out.println( h.getName() + " [" + h.getClass().getSimpleName() + "]");
+                System.out.println("   Capacity: " + h.getAnimals().size() + " animals currently inside.");
+            }
+        }
+    }
+
+    private static void viewFeedingPerformance(Zoo zoo) {
+        System.out.println("\n---  Feeding Performance ---");
+        if (zoo.getHabitats().isEmpty()) {
+            System.out.println("No habitats to show performance for.");
+        } else {
+            for (Habitat h : zoo.getHabitats()) {
+                System.out.println("📍 " + h.getName() + ": " + h.getFeedingPerformance() + "%");
+            }
+        }
+    }
+
+    // --- Menu Printers ---
     private static void printMainMenu() {
-        System.out.println("\n=== ZOO SYSTEM ===");
+        System.out.println("\n--- Safari Zoo ---");
         System.out.println("1) Staff Login");
+        System.out.println("2) View Zoo as Guest (Live DB Data)");
         System.out.println("0) Exit");
     }
 
     private static void printStaffMenu(Zoo zoo) {
-        System.out.println("\n=== STAFF MENU ===");
-        System.out.println("Logged in: " + zoo.getLoggedInStaff().getUsername());
-        System.out.println("1) Manage Animals");
-        System.out.println("2) View Habitat Schedule");
-        System.out.println("3) View Zoo Report");
-        System.out.println("4) Logout");
+        System.out.println("\n--- Staff: " + zoo.getLoggedInStaff().getName() + " ---");
+        System.out.println("1) Manage Animals\n2) View Schedules\n3) Report\n4) Logout\n0) Exit");
+    }
+
+ private static void printManagerMenu(Zoo zoo) {
+        System.out.println("\n--- Manager: " + zoo.getLoggedInStaff().getName() + " ---");
+        System.out.println("1) Animals      2) Schedules    3) Staff");
+        System.out.println("4) Habitats     5) Add Food     6) View Schedule");
+        System.out.println("7) Report       8) Logout");
+        System.out.println("9) [DB] VIEW FOOD STOCK   10)[DB] VIEW ALL STAFF "); // New labels
         System.out.println("0) Exit");
     }
-
-    private static void printManagerMenu(Zoo zoo) {
-        System.out.println("\n=== MANAGER MENU ===");
-        System.out.println("Logged in: " + zoo.getLoggedInStaff().getUsername());
-        System.out.println("1) Manage Animals");
-        System.out.println("2) Manage Schedule");
-        System.out.println("3) Manage Staff");
-        System.out.println("4) Manage Habitats");
-        System.out.println("5) Manage Foods");
-        System.out.println("6) View Habitat Schedule");
-        System.out.println("7) View Zoo Report");
-        System.out.println("8) Logout");
-        System.out.println("0) Exit");
-    }
-
-    // ===== SUBMENU METHODS =====
-    private static void manageAnimals(Zoo zoo, Scanner sc) {
-        System.out.println("\n--- Manage Animals ---");
-        System.out.println("1) Add Animal");
-        System.out.println("2) Remove Animal");
-        System.out.println("0) Back");
-        System.out.print("Choose: ");
-        int subChoice = sc.nextInt();
-        sc.nextLine();
-
-        switch (subChoice) {
-            case 1: { // Add Animal
-                System.out.print("Animal Name: ");
-                String name = sc.nextLine();
-
-                System.out.print("Age: ");
-                int age = sc.nextInt();
-                sc.nextLine();
-
-                System.out.print("Species: ");
-                String species = sc.nextLine();
-
-                System.out.print("Weight: ");
-                double weight = sc.nextDouble();
-                sc.nextLine();
-
-                Animal animal = new Animal(name, age, species, weight);
-
-                if (zoo.getHabitats().isEmpty()) {
-                    System.out.println("No habitats available.");
-                    break;
-                }
-
-                Habitat habitat = zoo.getHabitats().get(0);
-                zoo.addAnimalToHabitat(animal, habitat);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-
-            case 2: { // Remove Animal
-                System.out.print("Animal ID: ");
-                String animalId = sc.nextLine();
-
-                System.out.print("Habitat name: ");
-                String habitatName = sc.nextLine();
-
-                Habitat selectedHabitat = null;
-                Animal findAnimal = null;
-
-                for (Habitat h : zoo.getHabitats()) {
-                    if (h.getName().equalsIgnoreCase(habitatName)) {
-                        selectedHabitat = h;
-                        for (Animal a : h.getAnimals()) {
-                            if (a.getId() == Integer.parseInt(animalId)) {
-                                findAnimal = a;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-
-                if (selectedHabitat == null) {
-                    System.out.println("Habitat not found.");
-                    break;
-                }
-
-                if (findAnimal == null) {
-                    System.out.println("Animal not found in this habitat.");
-                    break;
-                }
-
-                zoo.removeAnimalFromHabitat(findAnimal, selectedHabitat);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-        }
-    }
-
-    private static void manageSchedule(Zoo zoo, Scanner sc) {
-        System.out.println("\n--- Manage Schedule ---");
-        System.out.println("1) Add Schedule");
-        System.out.println("2) Remove Schedule");
-        System.out.println("0) Back");
-        System.out.print("Choose: ");
-        int subChoice = sc.nextInt();
-        sc.nextLine();
-
-        switch (subChoice) {
-            case 1: { // Add Schedule
-                if (zoo.getHabitats().isEmpty()) {
-                    System.out.println("No habitats available.");
-                    break;
-                }
-                
-                Staff keeper = zoo.getLoggedInStaff();
-                if (!(keeper instanceof com.zoo.models.staff_roles.Keeper)) {
-                    System.out.println("Only keepers can be assigned to schedules.");
-                    break;
-                }
-
-                System.out.print("Schedule Date (YYYY-MM-DD): ");
-                String date = sc.nextLine().trim();
-
-                System.out.print("Schedule Time (HH:MM AM/PM): ");
-                String time = sc.nextLine().trim();
-
-                Schedule newSchedule = new Schedule(keeper, date, time);
-                
-                System.out.print("Habitat name: ");
-                String habitatName = sc.nextLine().trim();
-                
-                Habitat habitat = null;
-                for (Habitat h : zoo.getHabitats()) {
-                    if (h.getName().equalsIgnoreCase(habitatName)) {
-                        habitat = h;
-                        break;
-                    }
-                }
-                
-                if (habitat == null) {
-                    System.out.println("Habitat not found.");
-                    break;
-                }
-                
-                zoo.addScheduleToHabitat(newSchedule, habitat);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-
-            case 2: { // Remove Schedule
-                if (zoo.getHabitats().isEmpty()) {
-                    System.out.println("No habitats available.");
-                    break;
-                }
-
-                System.out.print("Schedule ID: ");
-                int scheduleId = sc.nextInt();
-                sc.nextLine();
-                
-                for (Habitat h : zoo.getHabitats()) {
-                    for (Schedule s : h.getFeedingTimes()) {
-                        if (s.getId() == scheduleId) {
-                            zoo.removeScheduleFromHabitat(s, h);
-                            System.out.println(zoo.getLastMessage());
-                            return;
-                        }
-                    }
-                }
-                System.out.println("Schedule not found.");
-                break;
-            }
-        }
-    }
-
-    private static void manageStaff(Zoo zoo, Scanner sc) {
-        System.out.println("\n--- Manage Staff ---");
-        System.out.println("1) Add Staff");
-        System.out.println("2) Remove Staff");
-        System.out.println("0) Back");
-        System.out.print("Choose: ");
-        int subChoice = sc.nextInt();
-        sc.nextLine();
-
-        switch (subChoice) {
-            case 1: { // Add Staff
-                System.out.println("--- Add New Staff ---");
-
-                System.out.print("Enter Staff ID: ");
-                String staffId = sc.nextLine().trim();
-
-                System.out.print("Enter Full Name: ");
-                String fullName = sc.nextLine().trim();
-
-                System.out.print("Enter Position (Keeper, Manager): ");
-                String position = sc.nextLine().trim();
-
-                System.out.print("Enter Username: ");
-                String username = sc.nextLine().trim();
-
-                System.out.print("Enter Password: ");
-                String password = sc.nextLine().trim();      
-
-                System.out.print("Enter Salary: ");
-                float salary = Float.parseFloat(sc.nextLine().trim());     
-
-                zoo.createStaff(staffId, fullName, position, username, password, salary);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-
-            case 2: { // Remove Staff
-                System.out.print("Staff ID to remove: ");
-                String staffId = sc.nextLine().trim();
-                zoo.removeStaff(staffId);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-        }
-    }
-
-    private static void manageHabitats(Zoo zoo, Scanner sc) {
-        System.out.println("\n--- Manage Habitats ---");
-        System.out.println("1) Create Habitat");
-        System.out.println("2) View animals in habitat");
-        System.out.println("3) Assign Habitat to Keeper");
-        System.out.println("0) Back");
-        System.out.print("Choose: ");
-        int subChoice = sc.nextInt();
-        sc.nextLine();
-
-        switch (subChoice) {
-            case 1: { // Create Habitat
-                System.out.println("--- Create New Habitat ---");
-                
-                System.out.print("Habitat Type (forest/ocean/savannah): ");
-                String habType = sc.nextLine().trim();
-
-                System.out.print("Food Name for habitat: ");
-                String foodName = sc.nextLine().trim();
-                System.out.print("Food Quantity: ");
-                int foodQty = sc.nextInt();
-                sc.nextLine();
-                System.out.print("Food Expiry Date: ");
-                String foodExpiry = sc.nextLine().trim();
-                System.out.print("Food Cost Per Unit: ");
-                float foodCost = sc.nextFloat();
-                sc.nextLine();
-                
-                Food habFood = new Food(foodName, foodQty, foodExpiry, foodCost);
-                zoo.addFoodToInventory(habFood);
-                zoo.createHabitat(habType, habFood);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-
-            case 2: {
-                System.out.print("Habitat name (eg: Ocean1): ");
-                String habitatName = sc.nextLine().trim();
-                for (Habitat h : zoo.getHabitats()) {
-                    if (h.getName().equals(habitatName)) {
-                        h.showAnimals();
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case 3: { // Assign Habitat to Keeper
-                System.out.println("--- Assign Habitat to Keeper ---");
-                System.out.print("Keeper ID: ");
-                String keeperId = sc.nextLine().trim();
-                
-                System.out.print("Habitat Name: ");
-                String habitatName = sc.nextLine().trim();
-                
-                Habitat selectedHabitat = null;
-                for (Habitat h : zoo.getHabitats()) {
-                    if (h.getName().equalsIgnoreCase(habitatName)) {
-                        selectedHabitat = h;
-                        break;
-                    }
-                }
-                
-                if (selectedHabitat == null) {
-                    System.out.println("Habitat not found.");
-                    break;
-                }
-                
-                zoo.assignHabitatToKeeper(keeperId, selectedHabitat);
-                System.out.println(zoo.getLastMessage());
-                break;
-            }
-        }
-    }
+    
+    // Stub methods for other logic
+    private static void manageSchedule(Zoo zoo) {}
+    private static void manageStaff(Zoo zoo) {}
 }

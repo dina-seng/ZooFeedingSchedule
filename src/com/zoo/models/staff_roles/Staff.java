@@ -10,7 +10,9 @@ interface HabitatAccess {
 
 public abstract class Staff implements IStaff, HabitatAccess{
     private String id, name, username, password;
-    private boolean status;
+    private boolean status; 
+
+    
 
     // Constructor
     public Staff(String id, String name, String username, String password) {
@@ -98,12 +100,11 @@ public abstract class Staff implements IStaff, HabitatAccess{
         return isBlank(username) ? "NA" : username;
     }
 
-    private String validatePassword(String password) {
-        String pw = (password == null) ? "" : password;
-        if (pw.isEmpty()) throw new IllegalArgumentException("Password required");
-        if (pw.length() < 8) throw new IllegalArgumentException("Password must be at least 8 characters");
-        pw = pw.trim();
-        return pw;
+    public String validatePassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password required (min 8 chars)");
+        }
+        return password;
     }
 
 }

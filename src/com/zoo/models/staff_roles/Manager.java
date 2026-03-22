@@ -1,5 +1,6 @@
 package com.zoo.models.staff_roles;
 import com.zoo.models.habitat_types.Habitat;
+import java.util.List;
 
 public class Manager extends Staff {
     private float salary;
@@ -10,6 +11,23 @@ public class Manager extends Staff {
         super(id, name, username, password);
         setSalary(salary);
     }
+
+
+    public void performDailyFeeding(List<Habitat> habitats) {
+        try {
+            System.out.println("Opening food storage...");
+            
+            for (Habitat h : habitats) {
+                h.feedAnimals();
+            }
+
+        } catch (NullPointerException e) {
+            System.out.println("Error: One of the habitats is not properly initialized!");
+        } finally {
+            System.out.println("Feeding session logged and storage secured.");
+        }
+    }
+
 
     @Override
     public boolean can(String action) {

@@ -6,6 +6,7 @@ public class Animal {
     private String species;
     private double weight;
     private static int nextId = 1;
+    private String habitatName;
 
     public Animal(String name, int age, String species, double weight) {
         this.id = nextId;
@@ -17,6 +18,7 @@ public class Animal {
     }
 
     // Getters
+    public String getHabitatName() { return habitatName; }
     public String getName() { return name; } 
     public int getId() { return id; }
     public int getAge() { return age; }
@@ -48,6 +50,8 @@ public class Animal {
         if ( weight <= 0 ) this.weight = 0;
         else this.weight = weight;
     }
+
+    public void setHabitatName(String habitatName) { this.habitatName = habitatName; }
 
     public boolean matchesSpeciesIgnoreCase(String species) {
         return this.species != null && this.species.equalsIgnoreCase(species);
