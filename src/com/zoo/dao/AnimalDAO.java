@@ -8,32 +8,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AnimalDAO {
-    
-        public List<Animal> getAllAnimals() throws ZooException {
-            List<Animal> list = new ArrayList<>();
-            String sql = "SELECT * FROM animal"; // Make sure table name matches MySQL
 
-            try (Connection conn = MySqlDatabaseConnection.getConnection();
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+    public List<Animal> getAllAnimals() throws ZooException {
+        List<Animal> list = new ArrayList<>();
 
-                while (rs.next()) {
-                    // Mapping MySQL columns to Java variables
-                    String name = rs.getString("name");
-                    String species = rs.getString("species");
-                    int age = rs.getInt("age");
-                    double weight = rs.getDouble("weight");
+        // JOIN habitat so we can resolve habitat_id → habitat name in one query
+        String sql = "SELECT a.animal_id, a.name, a.species, a.diet_type, " +
+                     "a.weight_kg, a.date_of_birth, a.habitat_id, h.name AS habitat_name " +
+                     "FROM animal a " +
+                     "LEFT JOIN habitat h ON a.habitat_id = h.habitat_id";
 
-              
-                    // Create the Animal object
-                    Animal a = new Animal(name, age, species, weight); 
-                    a.setHabitatName(rs.getString("habitat_name"));
+        try (Connection conn = MySqlDatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-                    list.add(a);
+            while (rs.next()) {
+                String name     = rs.getString("name");
+                String species  = rs.getString("species");
+                double weightKg = rs.getDouble("weight_kg");       // was "weight" ❌
+                String dob      = rs.getString("date_of_birth");   // was "age" ❌
+
+                // Calculate age from date_of_birth if your Animal constructor needs it
+                int age = 0;
+                if (dob != null) {
+                    int birthYear = Integer.parseInt(dob.substring(0, 4));
+                    age = java.time.Year.now().getValue() - birthYear;
                 }
-            } catch (SQLException e) {
-                throw new ZooException("SQL Error in AnimalDAO: " + e.getMessage());
+
+                Animal a = new Animal(name, age, species, weightKg);
+                a.setHabitatName(rs.getString("habitat_name"));    // now comes from JOIN ✅
+                list.add(a);
             }
-            return list;
+
+        } catch (SQLException e) {
+            // Print the real error so you can see it during development
+            System.err.println("SQL Error in AnimalDAO: " + e.getMessage());
+            throw new ZooException("SQL Error in AnimalDAO: " + e.getMessage());
         }
-}   
+        return list;
+    }
+}

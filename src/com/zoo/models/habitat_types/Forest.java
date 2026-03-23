@@ -6,22 +6,12 @@ import com.zoo.services.Schedule;
 import java.util.List;
 
 public class Forest extends Habitat {
-    private String id, name;
-    private static int nextId = 1;
+
 
     public Forest(List<Schedule> feedingTimes, Food food) {
-        super(feedingTimes, food);
-        this.id = "FR" + nextId++;
-        this.name = "Forest" + nextId++;
+        super(feedingTimes, food);   
     }
 
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getName() { return name;}
 
     @Override
     public void feedAnimals() {

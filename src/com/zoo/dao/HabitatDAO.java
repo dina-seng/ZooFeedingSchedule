@@ -34,19 +34,39 @@ public class HabitatDAO {
                 Food dummyFood = new Food("General Diet", 0.0, "2026-01-01", 0.0);
 
                 Habitat h = null; // Declare outside if-else to assign inside
-                
-                // Your subclasses call super(feedingTimes, food)
+            
+                int    habitatId = rs.getInt("habitat_id");
+                String name      = rs.getString("name");
+                String location  = rs.getString("location");
+                int    capacity  = rs.getInt("capacity");
+
+
                 if ("FOREST".equals(type)) {
-                    h = new Forest(emptySchedules, dummyFood);
+                    String dominantTree = rs.getString("dominant_tree_species");
+                    h = new Forest(emptySchedules, null);
+                    // If Forest has setters for its specific fields:
+                    // ((Forest) h).setDominantTreeSpecies(dominantTree);
+
                 } else if ("OCEAN".equals(type)) {
-                    h = new Ocean(emptySchedules, dummyFood);
+                    double salinity = rs.getDouble("salinity_ppt");
+                    h = new Ocean(emptySchedules, null);
+                    // ((Ocean) h).setSalinity(salinity);
+
                 } else if ("SAVANNAH".equals(type)) {
-                    h = new Savannah(emptySchedules, dummyFood);
+                    double grassland = rs.getDouble("grassland_area_sqm");
+                    h = new Savannah(emptySchedules, null);
+                    // ((Savannah) h).setGrasslandArea(grassland);
                 }
 
-                
-                
-                if (h != null) habitats.add(h);
+                //  THIS WAS THE MISSING PART — set the base fields on every habitat
+                if (h != null) {
+                    h.setId(habitatId);       // make sure Habitat has setId()
+                    h.setName(name);          // make sure Habitat has setName()
+                    h.setLocation(location);  // make sure Habitat has setLocation()
+                    h.setCapacity(capacity);  // make sure Habitat has setCapacity()
+                    habitats.add(h);
+                }
+            
             }
         } catch (SQLException e) {
             throw new ZooException("Database error: " + e.getMessage());

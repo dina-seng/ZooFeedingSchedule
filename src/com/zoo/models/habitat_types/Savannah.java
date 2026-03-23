@@ -6,25 +6,14 @@ import com.zoo.services.Schedule;
 import java.util.List;
 
 public class Savannah extends Habitat {
-    private String id, name;
-    private static int nextId = 1;
+
 
     public Savannah(List<Schedule> feedingTimes, Food food) {
         super(feedingTimes, food);
-        this.name = "SV" + nextId++;
-        this.id = "Savannah" + nextId++;
+
     }
 
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
+   
     @Override
     public void feedAnimals() {
         for (Animal a : getAnimals()) {
