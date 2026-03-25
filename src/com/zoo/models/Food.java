@@ -9,10 +9,9 @@ public class Food {
     private double stock;
     private String expiryDate;
     private double costPerUnit;
-    private static int nextId = 1;
+
 
     public Food(String name, double stock, String expiryDate, double costPerUnit) {
-        this.id = nextId++;
         this.name = name;
         this.stock = stock;
         this.expiryDate = expiryDate;
@@ -24,7 +23,6 @@ public class Food {
     public String getName() { return name;}
     public String getExpiryDate() { return expiryDate; }
     public double getCostPerUnit() { return costPerUnit; }
-    public static int getNextId(){ return nextId; }
 
     public void setStock(double stock) throws ZooException{
         if (stock >= 0) {

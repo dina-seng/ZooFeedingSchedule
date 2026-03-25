@@ -7,7 +7,7 @@ import com.zoo.models.habitat_types.Forest;
 import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.habitat_types.Ocean;
 import com.zoo.models.habitat_types.Savannah;
-import com.zoo.services.Schedule;
+import com.zoo.models.Schedule;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

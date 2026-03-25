@@ -23,10 +23,11 @@ public class AnimalDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                int id = rs.getInt("animal_id");
                 String name     = rs.getString("name");
                 String species  = rs.getString("species");
-                double weightKg = rs.getDouble("weight_kg");       // was "weight" ❌
-                String dob      = rs.getString("date_of_birth");   // was "age" ❌
+                double weightKg = rs.getDouble("weight_kg");
+                String dob      = rs.getString("date_of_birth");
 
                 // Calculate age from date_of_birth if your Animal constructor needs it
                 int age = 0;
@@ -36,7 +37,7 @@ public class AnimalDAO {
                 }
 
                 Animal a = new Animal(name, age, species, weightKg);
-                a.setHabitatName(rs.getString("habitat_name"));    // now comes from JOIN ✅
+                a.setHabitatName(rs.getString("habitat_name"));
                 list.add(a);
             }
 

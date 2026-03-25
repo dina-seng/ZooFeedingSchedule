@@ -56,7 +56,7 @@ public class ZooMain {
         System.out.print("Enter Email: "); //dina@zoo.com or keeper@zoo.com 
         String email = sc.nextLine().trim();
         
-        System.out.print("Enter Password: "); // pw both is 12345
+        System.out.print("Enter Password: "); // pw both is 12345678
         String password = sc.nextLine().trim();
 
         // This now checks MySQL instead of RAM!
@@ -137,7 +137,7 @@ public class ZooMain {
                     
                     case 1 -> viewAnimalsGuest(zoo);
                     case 2 -> viewHabitatsGuest(zoo);
-                    case 3 -> viewFoodInventoryFromDB(zoo); // Reuse your existing method!
+                    case 3 -> viewFoodInventoryFromDB(zoo);
                     case 4 -> viewFeedingPerformance(zoo);
                     case 0 -> back = true;
                     default -> System.out.println("Invalid choice.");
@@ -180,7 +180,7 @@ public class ZooMain {
         System.out.print("Expiry (YYYY-MM-DD): "); String expiry = sc.nextLine();
         System.out.print("Cost: "); double cost = Double.parseDouble(sc.nextLine());
 
-        zoo.addFoodToInventory(new Food(name, stock, expiry, cost));
+//        zoo.addFoodToInventory(new Food(name, stock, expiry, cost));
         System.out.println("Food inventory updated.");
     }
 

@@ -5,6 +5,4 @@ public class InvalidHabitatException extends ZooException {
         super(message);
     }
 
-
-
 }

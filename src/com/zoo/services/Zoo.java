@@ -1,18 +1,23 @@
 package com.zoo.services;
 
 
+import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
 import com.zoo.dao.*;
 import com.zoo.exceptions.InvalidHabitatException;
+import com.zoo.exceptions.InvalidNameException;
 import com.zoo.exceptions.ZooException;
 import com.zoo.models.Animal;
 import com.zoo.models.Food;
+import com.zoo.models.Schedule;
 import com.zoo.models.habitat_types.Forest;
 import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.habitat_types.Ocean;
 import com.zoo.models.habitat_types.Savannah;
-import com.zoo.models.staff_roles.Keeper;
-import com.zoo.models.staff_roles.Manager;
 import com.zoo.models.staff_roles.Staff;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +41,8 @@ public class Zoo {
     private List<Staff> users = new ArrayList<>();
     private List<Habitat> habitats = new ArrayList<>();
     private List<Food> foodInventory = new ArrayList<>(); 
-    private List<Animal> animals = new ArrayList<>(); // Added to store animals in the zoo
+    private List<Schedule> schedules = new ArrayList<>();
+    private List<Animal> animals = new ArrayList<>(); 
     private AnimalDAO animalDAO = new AnimalDAO(); 
     private HabitatDAO habitatDAO = new HabitatDAO();
     private FoodDAO foodDAO = new FoodDAO();
@@ -48,14 +54,13 @@ public class Zoo {
     public Zoo(String zooName, String address) {
         this.zooName = zooName.trim();
         this.address = address.trim();
-        setDefaultManager(); 
 
         initializeData();
 
         System.out.println("System: Loaded " + animals.size() + " animals from database.");
     
         loggedInUser = null;
-        lastMessage = "Zoo Created. Default: admin1 / 12345";
+        lastMessage = "Zoo Created. Default: admin1 / 12345678";
     } 
 
     public void initializeData() {
@@ -63,7 +68,8 @@ public class Zoo {
             this.users = staffDAO.getAllStaff();
             this.foodInventory = foodDAO.getInventory();
             this.habitats = habitatDAO.getAllHabitats();          
-            this.animals = animalDAO.getAllAnimals(); 
+            this.animals = animalDAO.getAllAnimals();
+            this.schedules = scheduleDAO.getAllSchedules();
 
         for (Animal a : animals) {
             for (Habitat h : habitats) {
@@ -85,9 +91,8 @@ public class Zoo {
     public List<Animal> getAnimals() {
         return this.animals;
     }
-    public List<Food> getFoodInventory() {
-        return this.foodInventory;
-    }
+    public List<Food> getFoodInventory() {return this.foodInventory;}
+    public List<Schedule> getSchedules() {return this.schedules;}
 
     // You will also need this for your Staff view
     public List<Staff> getUsers() {
@@ -102,13 +107,6 @@ public class Zoo {
     public List<Habitat> getHabitats() { return habitats; }
     public boolean isStaffLoggedIn() { return loggedInUser != null; }
     public Staff getLoggedInStaff() { return loggedInUser; }
-
-    private void setDefaultManager() {
-        Manager admin = new Manager("M001", "Admin", "admin1", "12345678", 1500);
-        Keeper k = new Keeper("K001", "Keeper", "keeper1", "12345678", 1500);
-        registerUser(admin);
-        registerUser(k);
-    }
 
     private boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
@@ -178,11 +176,11 @@ public class Zoo {
     }
 
     // --- STAFF MANAGEMENT ---
-    public void createStaff(String staffId, String fullName, String position,
+    public void createStaff(String fullName, String position,
                             String username, String password, float salary) throws ZooException {
         if (!requirePermission(STAFF_MANAGE)) return;
 
-        if (isBlank(staffId) || isBlank(username)) {
+        if (isBlank(username)) {
             throw new ZooException("Cannot create staff: staffId/username is empty.");
         }
 
@@ -191,27 +189,21 @@ public class Zoo {
             throw new ZooException("Cannot create staff: username already exists.");
         }
 
-        if (position.equalsIgnoreCase("Manager")) {
-            users.add(new Manager(staffId, fullName, username, password, salary));
-            setLastMessage("Manager created successfully.");
-        } else if (position.equalsIgnoreCase("Keeper")) {
-            users.add(new Keeper(staffId, fullName, username, password, salary));
-            setLastMessage("Keeper created successfully.");
-        }
+        Staff newStaff = staffDAO.createStaff(fullName, position, username, password, salary);
+        users.add(newStaff);
+        setLastMessage(position + " created successfully.");
     }
 
-    public void removeStaff(String staffId) throws ZooException {
+    public void removeStaff(int staffId) throws ZooException {
         if (!requirePermission(STAFF_MANAGE)) return;
 
-        if (isBlank(staffId)) {
-            throw new ZooException("staffId is empty.");
-        }
         for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getId().equalsIgnoreCase(staffId.trim())) {
+            if (users.get(i).getId() == staffId) {
                 String name = users.get(i).getUsername();
+                staffDAO.deleteStaff(staffId);
                 users.remove(i);
                 setLastMessage("Staff " + name + " removed successfully.");
-                return; 
+                return;
             }
         }
         throw new ZooException("Staff not found.");
@@ -249,12 +241,11 @@ public class Zoo {
         }
     }
 
-    public void assignHabitatToKeeper(String staffId, Habitat habitat) throws ZooException {
+    public void assignHabitatToKeeper(int staffId, Habitat habitat) throws ZooException {
         if (!requirePermission(STAFF_MANAGE)) return;
 
         Staff staff = users.stream()
-            .filter(s -> s.getId().equalsIgnoreCase(staffId.trim()))
-            .findFirst()
+            .filter(s -> s.getId() == staffId).findFirst()
             .orElseThrow(() -> new ZooException("Staff not found."));
 
         try {
@@ -282,10 +273,32 @@ public class Zoo {
     }
 
     // --- FOOD & SCHEDULE ---
-    public void addFoodToInventory(Food food) throws ZooException {
-        if (!requirePermission(FOOD_MANAGE)) return;
-        foodInventory.add(food);
-        setLastMessage("Food added to central inventory.");
+    public void addFoodToInventory(Food food) throws Exception {
+        String sql = "INSERT INTO food (name, stock, expiry_date, costPerUnit) VALUES (?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, food.getName());
+            ps.setDouble(2, food.getStock());
+            ps.setString(3, food.getExpiryDate());
+            ps.setDouble(4, food.getCostPerUnit());
+            ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) food.setId(rs.getInt(1));
+            }
+
+            foodInventory.add(food);
+        }
+    }
+
+    public void removeFoodFromInventory(int id) throws Exception {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM food WHERE food id = ?")) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+        foodInventory.removeIf(f -> f.getId() == id);
     }
 
     public void feedHabitat(Habitat habitat, int foodId, double amount) throws ZooException {
@@ -335,6 +348,19 @@ public class Zoo {
         if (type.equals("savannah")) return new Savannah(null, food);
         
         throw new ZooException("Unknown habitat type. Use: forest, ocean, savannah.");
+    }
+
+
+    public static void validateName(String fieldName, String value) throws InvalidNameException {
+        if (value == null || value.trim().isEmpty()) {
+            throw new InvalidNameException(fieldName, "(empty)");
+        }
+        try {
+            Double.parseDouble(value.trim()); 
+            throw new InvalidNameException(fieldName, value);
+        } catch (NumberFormatException e) {
+            // Valid name, do nothing
+        }
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.zoo.models.habitat_types;
 import com.zoo.interfaces.IHabitat;
 import com.zoo.models.Animal;
 import com.zoo.models.Food;
-import com.zoo.services.Schedule;
+import com.zoo.models.Schedule;
 import java.util.ArrayList;
 import java.util.List;
 

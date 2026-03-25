@@ -4,10 +4,9 @@ import java.util.List;
 
 public class Manager extends Staff {
     private float salary;
-
     
     // Constructor
-    public Manager(String id, String name, String username, String password, float salary) {
+    public Manager(int id, String name, String username, String password, float salary) {
         super(id, name, username, password);
         setSalary(salary);
     }
@@ -71,7 +70,7 @@ public class Manager extends Staff {
         if (!(obj instanceof Manager)) return false;
 
         Manager other = (Manager) obj;
-        return getId().equals(other.getId());
+        return getId() == other.getId();
     }
 
 }

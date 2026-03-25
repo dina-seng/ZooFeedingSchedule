@@ -2,9 +2,9 @@ package com.zoo.dao;
 
 import com.zoo.controller.MySqlDatabaseConnection;
 import com.zoo.exceptions.ZooException;
-import com.zoo.interfaces.IStaff;
 import com.zoo.models.staff_roles.Keeper;
-import com.zoo.services.Schedule;
+import com.zoo.models.staff_roles.Staff;
+import com.zoo.models.Schedule;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,48 +14,56 @@ public class ScheduleDAO {
     public List<Schedule> getAllSchedules() throws ZooException {
         List<Schedule> schedules = new ArrayList<>();
 
-        String sql = "SELECT fs.schedule_id, fs.feeding_time, fs.day_of_week, " +
-                     "fs.quantity_kg, fs.notes, " +
-                     "a.name AS animal_name, " +
-                     "f.name AS food_name, " +
-                     "CONCAT(st.first_name, ' ', st.last_name) AS keeper_name, " +
-                     "st.staff_id, st.email " +
-                     "FROM feeding_schedule fs " +
-                     "JOIN animal a  ON fs.animal_id = a.animal_id " +
-                     "JOIN food f    ON fs.food_id   = f.food_id " +
-                     "JOIN staff st  ON fs.staff_id  = st.staff_id";
+        // Select all required fields
+        String sql = "SELECT fs.schedule_id, fs.animal_id, fs.staff_id, fs.food_id, " +
+                "fs.feeding_time, fs.quantity_kg, fs.notes, fs.completed, " +
+                "st.first_name, st.last_name, st.email " +
+                "FROM feeding_schedule fs " +
+                "JOIN staff st ON fs.staff_id = st.staff_id";
 
         try (Connection conn = MySqlDatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-              
-                String timeStr   = rs.getString("feeding_time");   // "08:00:00"
-                String dayOfWeek = rs.getString("day_of_week");    // "MONDAY"
-                String animalName = rs.getString("animal_name");
-                String foodName   = rs.getString("food_name");
-                String keeperName = rs.getString("keeper_name");
+
+                int scheduleId = rs.getInt("schedule_id");
+                int animalId   = rs.getInt("animal_id");
+                int staffId    = rs.getInt("staff_id");
+                int foodId     = rs.getInt("food_id");
+                String feedingTime = rs.getString("feeding_time");
+                float quantityKg   = rs.getFloat("quantity_kg");
+                String notes       = rs.getString("notes");
+                boolean completed  = rs.getBoolean("completed");
+
+                // Build Keeper object
+                String keeperName  = rs.getString("first_name") + " " + rs.getString("last_name");
                 String keeperEmail = rs.getString("email");
-                String staffId    = String.valueOf(rs.getInt("staff_id"));
+                Staff keeper = new Keeper(staffId, keeperEmail, "12345678", "12345678", 500.0f);
 
-                // Build a real Keeper from DB data instead of a dummy
-                IStaff keeper = new Keeper(staffId, keeperName, keeperEmail, "hidden", 0.0f);
-
-                Schedule sch = new Schedule(keeper, dayOfWeek, timeStr);
+                // Build Schedule object
+                Schedule sch = new Schedule(scheduleId, animalId, staffId, foodId,
+                        feedingTime, quantityKg, notes, completed);
 
                 schedules.add(sch);
-
-                // Debug — remove once confirmed working
-                System.out.println("Loaded schedule: " + animalName + 
-                                   " | " + foodName + 
-                                   " | " + dayOfWeek + " " + timeStr);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
             throw new ZooException("Failed to load schedules: " + e.getMessage());
         }
+
         return schedules;
+    }
+
+    // Optional: method to update completion status
+    public static void updateCompletionStatus(int scheduleId, boolean completed) throws SQLException {
+        String sql = "UPDATE feeding_schedule SET completed = ? WHERE schedule_id = ?";
+        try (Connection conn = MySqlDatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setBoolean(1, completed);
+            stmt.setInt(2, scheduleId);
+            stmt.executeUpdate();
+        }
     }
 }

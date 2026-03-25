@@ -2,7 +2,7 @@ package com.zoo.interfaces;
 
 import com.zoo.models.Animal;
 import com.zoo.models.Food;
-import com.zoo.services.Schedule;
+import com.zoo.models.Schedule;
 import java.util.List;
 
 public interface IHabitat {

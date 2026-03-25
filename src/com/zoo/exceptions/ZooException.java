@@ -6,7 +6,6 @@ public class ZooException extends Exception {
     
     private String timestamp; 
 
-
     // Constructor
     public ZooException(String message) {
         // Call the parent constructor to set the message

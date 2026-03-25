@@ -9,14 +9,15 @@ interface HabitatAccess {
 }
 
 public abstract class Staff implements IStaff, HabitatAccess{
-    private String id, name, username, password;
-    private boolean status; 
+    private String name, username, password;
+    private boolean status;
+    int id;
 
     
 
     // Constructor
-    public Staff(String id, String name, String username, String password) {
-        this.id = validateId(id);
+    public Staff(int id, String name, String username, String password) {
+        this.id = id;
         this.name = validateName(name);
         this.username = validateUsername(username);
         this.password = validatePassword(password);
@@ -27,7 +28,7 @@ public abstract class Staff implements IStaff, HabitatAccess{
 
     // Getters
     @Override
-    public String getId(){ return id; }
+    public int getId(){ return id; }
     @Override
     public String getUsername(){return username;}
     @Override
@@ -47,9 +48,6 @@ public abstract class Staff implements IStaff, HabitatAccess{
     }
 
     // Setters
-    public void setId(String id) {
-        this.id = validateId(id);
-    }
 
     public void setName(String name) {
         this.name = validateName(name);
@@ -69,7 +67,7 @@ public abstract class Staff implements IStaff, HabitatAccess{
 
     @Override
     public String toString() {
-        return "Staff [id=" + id + ", name=" + name + ", username=" + username + ", password=" + password
+        return "Staff [name=" + name + ", username=" + username + ", password=" + password
                 +", status=" + status + "]";
     }
 
@@ -88,9 +86,6 @@ public abstract class Staff implements IStaff, HabitatAccess{
         return Objects.equals(this.id, other.id);
     }
 
-    private String validateId(String id) {
-        return isBlank(id) ? "Unknown" : id.trim();
-    }
 
     private String validateName(String name) {
         return isBlank(name) ? "NA" : name.trim();

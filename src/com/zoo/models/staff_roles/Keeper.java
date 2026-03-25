@@ -15,7 +15,7 @@ public class Keeper extends Staff {
     }
 
     // Constructor
-    public Keeper(String id, String name, String username, String password, float salary) {
+    public Keeper(int id, String name, String username, String password, float salary) {
         super(id, name, username, password);
         setSalary(salary);
     }
@@ -58,7 +58,7 @@ public class Keeper extends Staff {
         if (this == obj) return true;
         if (!(obj instanceof Keeper other)) return false;
 
-        return getId().equals(other.getId());
+        return getId() == other.getId();
     }
 }
 

@@ -1,10 +1,13 @@
 package com.zoo.main;
 
+import com.zoo.exceptions.InvalidNameException;
 import com.zoo.exceptions.ZooException;
 import com.zoo.models.Animal;
 import com.zoo.models.Food;
+import com.zoo.models.Schedule;
 import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.staff_roles.Manager;
+import com.zoo.models.staff_roles.Staff;
 import com.zoo.services.Zoo;
 import java.awt.*;
 import javax.swing.*;
@@ -50,10 +53,10 @@ public class ZooLoginGUI {
     private static final Color TEXT_DARK   = new Color(28,37,38);
     private static final Color TEXT_MUTED   = new Color(144, 164, 174);
     private static final Color FIELD_BG     = new Color(55, 71, 79);
-    private static final Font  FONT_TITLE   = new Font("Segoe UI", Font.BOLD, 26);
-    private static final Font  FONT_LABEL   = new Font("Segoe UI", Font.PLAIN, 14);
-    private static final Font  FONT_BUTTON  = new Font("Segoe UI", Font.BOLD, 14);
-    private static final Font  FONT_SMALL   = new Font("Segoe UI", Font.PLAIN, 12);
+    private static final Font  FONT_TITLE   = new Font("Segoe UI Emoji", Font.BOLD, 26);
+    private static final Font  FONT_LABEL   = new Font("Segoe UI Emoji", Font.PLAIN, 14);
+    private static final Font  FONT_BUTTON  = new Font("Segoe UI Emoji", Font.BOLD, 14);
+    private static final Font  FONT_SMALL   = new Font("Segoe UI Emoji", Font.PLAIN, 12);
 
     // ─────────────────────────────────────────────────────────────────────────
     // ENTRY POINT
@@ -77,6 +80,7 @@ public class ZooLoginGUI {
             zoo = new Zoo("Safari Zoo", "Phnom Penh");
         } catch (Exception e) {
             // LO4 multiple catch — runtime exception separate from our custom one
+            e.printStackTrace(); // 👈 VERY IMPORTANT
             JOptionPane.showMessageDialog(null,
                 "Failed to initialize Zoo system:\n" + e.getMessage(),
                 "Startup Error", JOptionPane.ERROR_MESSAGE);
@@ -110,10 +114,12 @@ public class ZooLoginGUI {
         card.setBorder(new EmptyBorder(36, 40, 36, 40));
         card.setPreferredSize(new Dimension(340, 420));
 
+
         // ── Zoo icon label ────────────────────────────────────────────────────
         JLabel iconLabel = new JLabel("🦁", SwingConstants.CENTER);
         iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
-        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(wrapCenter(iconLabel));
+        iconLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(iconLabel);
         card.add(Box.createVerticalStrut(8));
 
@@ -121,13 +127,15 @@ public class ZooLoginGUI {
         JLabel title = new JLabel("Safari Zoo", SwingConstants.CENTER);
         title.setFont(FONT_TITLE);
         title.setForeground(ACCENT_GREEN);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(wrapCenter(title));
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(title);
 
         JLabel subtitle = new JLabel("Staff Management System", SwingConstants.CENTER);
         subtitle.setFont(FONT_SMALL);
         subtitle.setForeground(TEXT_MUTED);
-        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(wrapCenter(subtitle));
+        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(subtitle);
         card.add(Box.createVerticalStrut(28));
 
@@ -135,6 +143,8 @@ public class ZooLoginGUI {
         card.add(makeFieldLabel("Email Address"));
         card.add(Box.createVerticalStrut(6));
         emailField = makeTextField("e.g. admin@zoo.com");
+        emailField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+        emailField.setAlignmentX(Component.LEFT_ALIGNMENT);             
         card.add(emailField);
         card.add(Box.createVerticalStrut(16));
 
@@ -143,6 +153,7 @@ public class ZooLoginGUI {
         card.add(Box.createVerticalStrut(6));
         passwordField = new JPasswordField();
         styleField(passwordField);
+        passwordField.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(passwordField);
         card.add(Box.createVerticalStrut(24));
 
@@ -155,7 +166,7 @@ public class ZooLoginGUI {
         loginButton.setBorderPainted(false);
         loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         loginButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
-        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // ── LO9 Button click → program logic ─────────────────────────────────
         loginButton.addActionListener(e -> handleLogin());
@@ -172,7 +183,7 @@ public class ZooLoginGUI {
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         statusLabel.setFont(FONT_SMALL);
         statusLabel.setForeground(TEXT_MUTED);
-        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.add(statusLabel);
 
         root.add(card);
@@ -229,23 +240,26 @@ public class ZooLoginGUI {
         }
     }
 
-    /**
-     * LO6 throw  — manually throws a ZooException for invalid input
-     * LO7 throws — method signature declares it
-     *
-     * This is the KEY method to show your teacher:
-     * "throw creates a custom problem, throws declares it in the signature"
-     */
     private void validateLoginInput(String email, String password) throws ZooException {
-        if (email == null || email.isEmpty()) {
-            throw new ZooException("Email cannot be blank.");       // LO6 throw
-        }
-        if (password == null || password.isEmpty()) {
-            throw new ZooException("Password cannot be blank.");    // LO6 throw
-        }
-        if (!email.contains("@")) {
+        // Null / blank
+        if (email == null || email.isEmpty())
+            throw new ZooException("Email cannot be blank.");
+        if (password == null || password.isEmpty())
+            throw new ZooException("Password cannot be blank.");
+
+        // Length caps
+        if (email.length() > 254)
+            throw new ZooException("Email address is too long.");
+        if (password.length() > 128)
+            throw new ZooException("Password is too long.");
+
+        // Proper email format
+        if (!email.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$"))
             throw new ZooException("Please enter a valid email address.");
-        }
+
+        // Minimum password length
+        if (password.length() < 8)
+            throw new ZooException("Password must be at least 8 characters.");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -272,7 +286,7 @@ public class ZooLoginGUI {
             zoo.getLoggedInStaff().getName() +
             "  [" + zoo.getLoggedInStaff().getClass().getSimpleName() + "]"
         );
-        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        welcomeLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 15));
         welcomeLabel.setForeground(TEXT_WHITE);
 
         JButton logoutBtn = makeSmallButton("Logout", ACCENT_RED);
@@ -289,11 +303,12 @@ public class ZooLoginGUI {
 
         tabs.addTab("🐾  Animals",   buildAnimalsTab());
         tabs.addTab("🌿  Habitats",  buildHabitatsTab());
-        tabs.addTab("🍖  Food",      buildFoodTab());
+        tabs.addTab("🍖  Foods",      buildFoodTab());
+        tabs.addTab("⌛  Schedules",  buildScheduleTab());
 
         // Only show staff tab if Manager
         if (zoo.getLoggedInStaff() instanceof Manager) {
-            tabs.addTab("👥  Staff", buildStaffTab());
+            tabs.addTab("👥  Staffs", buildStaffTab());
         }
 
         root.add(topBar, BorderLayout.NORTH);
@@ -314,30 +329,134 @@ public class ZooLoginGUI {
             public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        // LO11 — pulling data from OOP Animal objects into the GUI
-        // LO3 try-catch — database read wrapped safely
         try {
             for (Animal a : zoo.getAnimals()) {
                 model.addRow(new Object[]{
-                    a.getName(),
-                    a.getSpecies(),
-                    a.getAge(),
-                    a.getWeight(),
-                    a.getHabitatName() != null ? a.getHabitatName() : "—"
+                        a.getName(), a.getSpecies(), a.getAge(), a.getWeight(),
+                        a.getHabitatName() != null ? a.getHabitatName() : "—"
                 });
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(dashboardFrame,
-                "Error loading animals: " + e.getMessage(),
-                "Data Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(dashboardFrame, "Error loading animals: " + e.getMessage(), "Data Error", JOptionPane.ERROR_MESSAGE);
         }
 
         JTable table = makeStyledTable(model);
         JScrollPane scroll = new JScrollPane(table);
         styleScrollPane(scroll);
 
+        // ── Button panel ──────────────────────────────────────────────────────
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnPanel.setBackground(BG_DARK);
+
+        if (zoo.getLoggedInStaff() instanceof Manager) {
+            JButton addBtn = makeSmallButton("+ Add Animal", ACCENT_GREEN);
+            addBtn.addActionListener(e -> {
+                JTextField nameF    = new JTextField();
+                JTextField speciesF = new JTextField();
+                JTextField ageF     = new JTextField();
+                JTextField weightF  = new JTextField();
+
+                // Build habitat dropdown
+                String[] habitatNames = zoo.getHabitats().stream()
+                        .map(Habitat::getName).toArray(String[]::new);
+                JComboBox<String> habitatBox = new JComboBox<>(habitatNames);
+
+                Object[] fields = {
+                        "Name:", nameF, "Species:", speciesF,
+                        "Age:", ageF, "Weight (kg):", weightF,
+                        "Habitat:", habitatBox
+                };
+
+                int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
+                        "Add New Animal", JOptionPane.OK_CANCEL_OPTION);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        String name    = nameF.getText().trim();
+                        String species = speciesF.getText().trim();
+                        String ageS    = ageF.getText().trim();
+                        String weightS = weightF.getText().trim();
+
+                        // ── Blank checks ──────────────────────────────────────
+                        if (name.isEmpty())    throw new ZooException("Animal name cannot be blank.");
+                        if (species.isEmpty()) throw new ZooException("Species cannot be blank.");
+                        if (ageS.isEmpty())    throw new ZooException("Age cannot be blank.");
+                        if (weightS.isEmpty()) throw new ZooException("Weight cannot be blank.");
+
+                        // ── Name / species must not be numbers ────────────────
+                        zoo.validateName("Animal Name", name);
+                        zoo.validateName("Species", species);
+
+                        // ── Parse with friendly errors ────────────────────────
+                        int age;
+                        double weight;
+                        try { age = Integer.parseInt(ageS); }
+                        catch (NumberFormatException ex) { throw new ZooException("Age must be a whole number (e.g. 5)."); }
+
+                        try { weight = Double.parseDouble(weightS); }
+                        catch (NumberFormatException ex) { throw new ZooException("Weight must be a number (e.g. 120.5)."); }
+
+                        // ── Range checks ──────────────────────────────────────
+                        if (age <= 0 || age > 100)      throw new ZooException("Age must be between 1 and 100.");
+                        if (weight <= 0)                 throw new ZooException("Weight must be greater than 0.");
+                        if (zoo.getHabitats().isEmpty()) throw new ZooException("No habitats available. Add a habitat first.");
+
+                        int habitatIdx   = habitatBox.getSelectedIndex();
+                        Habitat selected = zoo.getHabitats().get(habitatIdx);
+
+                        zoo.addAnimalToHabitat(new Animal(name, age, species, weight), selected);
+                        model.addRow(new Object[]{name, species, age, weight, selected.getName()});
+                        JOptionPane.showMessageDialog(dashboardFrame, "Animal added successfully!");
+
+                    } catch (InvalidNameException ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame, ex.getMessage(), "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                    } catch (ZooException ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame, ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame, "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+
+            JButton delBtn = makeSmallButton("- Remove Animal", ACCENT_RED);
+            delBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(dashboardFrame, "Please select an animal to remove.");
+                    return;
+                }
+                String animalName = (String) model.getValueAt(row, 0);
+                String habitatName = (String) model.getValueAt(row, 4);
+
+                int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
+                        "Remove " + animalName + "?", "Confirm", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        Animal target = zoo.getAnimals().stream()
+                                .filter(a -> a.getName().equals(animalName)).findFirst().orElse(null);
+                        Habitat habitat = zoo.getHabitats().stream()
+                                .filter(h -> h.getName().equals(habitatName)).findFirst().orElse(null);
+                        if (target != null && habitat != null) {
+                            zoo.removeAnimalFromHabitat(target, habitat);
+                            model.removeRow(row);
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+
+            btnPanel.add(addBtn);
+            btnPanel.add(delBtn);
+        }
+
         JLabel header = makeTabHeader("Animals in Safari Zoo  (" + model.getRowCount() + " total)");
-        panel.add(header, BorderLayout.NORTH);
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(BG_DARK);
+        top.add(header, BorderLayout.WEST);
+        top.add(btnPanel, BorderLayout.EAST);
+
+        panel.add(top, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
@@ -385,7 +504,7 @@ public class ZooLoginGUI {
         panel.setBackground(BG_DARK);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        String[] cols = {"ID", "Food Name", "Stock", "Expiry Date", "Cost/Unit"};
+        String[] cols = {"ID", "Food Name", "Stock(kg)", "Expiry Date", "Cost/Unit($)"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -393,25 +512,297 @@ public class ZooLoginGUI {
         try {
             for (Food f : zoo.getFoodInventory()) {
                 model.addRow(new Object[]{
-                    f.getId(),
-                    f.getName(),
-                    String.format("%.2f", f.getStock()),
-                    f.getExpiryDate(),
-                    String.format("$%.2f", f.getCostPerUnit())
+                        f.getId(), f.getName(),
+                        String.format("%.2f", f.getStock()),
+                        f.getExpiryDate(),
+                        String.format("$%.2f", f.getCostPerUnit())
                 });
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(dashboardFrame,
-                "Error loading food inventory: " + e.getMessage(),
-                "Data Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(dashboardFrame, "Error loading food: " + e.getMessage(), "Data Error", JOptionPane.ERROR_MESSAGE);
         }
 
         JTable table = makeStyledTable(model);
         JScrollPane scroll = new JScrollPane(table);
         styleScrollPane(scroll);
 
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnPanel.setBackground(BG_DARK);
+
+        if (zoo.getLoggedInStaff() instanceof Manager) {
+
+            // ── Add Food ──────────────────────────────────────────────────────────
+            JButton addBtn = makeSmallButton("+ Add Food", ACCENT_GREEN);
+            addBtn.addActionListener(e -> {
+            JTextField nameF   = new JTextField();
+            JTextField stockF  = new JTextField();
+            JTextField expiryF = new JTextField("2026-12-31");
+            JTextField costF   = new JTextField();
+
+            Object[] fields = {
+                    "Food Name:", nameF, "Stock (kg):", stockF,
+                    "Expiry (YYYY-MM-DD):", expiryF, "Cost per Unit ($):", costF
+            };
+
+            int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
+                    "Add Food to Inventory", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    String name   = nameF.getText().trim();
+                    String stockS = stockF.getText().trim();
+                    String expiry = expiryF.getText().trim();
+                    String costS  = costF.getText().trim();
+
+                    // ── Blank checks ──────────────────────────────────────────
+                    if (name.isEmpty())   throw new ZooException("Food name cannot be blank.");
+                    if (stockS.isEmpty()) throw new ZooException("Stock cannot be blank.");
+                    if (expiry.isEmpty()) throw new ZooException("Expiry date cannot be blank.");
+                    if (costS.isEmpty())  throw new ZooException("Cost cannot be blank.");
+
+                    // ── Name must not be a number ─────────────────────────────
+                    zoo.validateName("Food Name", name);
+
+                    // ── Parse numbers ─────────────────────────────────────────
+                    double stock, cost;
+                    try {
+                        stock = Double.parseDouble(stockS);
+                    } catch (NumberFormatException ex) {
+                        throw new ZooException("Stock must be a valid number (e.g. 10 or 5.5).");
+                    }
+                    try {
+                        cost = Double.parseDouble(costS);
+                    } catch (NumberFormatException ex) {
+                        throw new ZooException("Cost must be a valid number (e.g. 2.99).");
+                    }
+
+                    // ── Range checks ──────────────────────────────────────────
+                    if (stock <= 0) throw new ZooException("Stock must be greater than 0.");
+                    if (cost  <= 0) throw new ZooException("Cost must be greater than 0.");
+
+                    // ── Date format check ─────────────────────────────────────
+                    if (!expiry.matches("\\d{4}-\\d{2}-\\d{2}"))
+                        throw new ZooException("Expiry must be in YYYY-MM-DD format (e.g. 2027-06-30).");
+
+                    // ── All good → persist ────────────────────────────────────
+                    Food newFood = new Food(name, stock, expiry, cost);
+                    zoo.addFoodToInventory(newFood);
+
+                    model.addRow(new Object[]{
+                            newFood.getId(), name,
+                            String.format("%.2f", stock), expiry,
+                            String.format("$%.2f", cost)
+                    });
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            "Food added successfully! (ID: " + newFood.getId() + ")");
+
+                } catch (InvalidNameException ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            ex.getMessage(), "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                } catch (ZooException ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+            // ── Remove Food ───────────────────────────────────────────────────────
+            JButton delBtn = makeSmallButton("- Remove Food", ACCENT_RED);
+            delBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(dashboardFrame, "Please select a food item to remove.");
+                    return;
+                }
+                String foodName = (String) model.getValueAt(row, 1);
+                int foodId      = (int)   model.getValueAt(row, 0);
+
+                int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
+                        "Remove \"" + foodName + "\" from inventory?",
+                        "Confirm Removal", JOptionPane.YES_NO_OPTION);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        zoo.removeFoodFromInventory(foodId);
+                        model.removeRow(row);
+                        JOptionPane.showMessageDialog(dashboardFrame, "\"" + foodName + "\" removed.");
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+
+            btnPanel.add(addBtn);
+            btnPanel.add(delBtn);
+        }
+
         JLabel header = makeTabHeader("Food Inventory  (" + model.getRowCount() + " items)");
-        panel.add(header, BorderLayout.NORTH);
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(BG_DARK);
+        top.add(header, BorderLayout.WEST);
+        top.add(btnPanel, BorderLayout.EAST);
+
+        panel.add(top, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel buildScheduleTab() {
+        JPanel panel = new JPanel(new BorderLayout(0, 0));
+        panel.setBackground(BG_DARK);
+        panel.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        String[] cols = {"ID", "StaffId", "AnimalId", "FoodId", "Feeding Time", "Quantity (kg)", "Notes", "Status"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        try {
+            for (Schedule s : zoo.getSchedules()) {
+                model.addRow(new Object[]{
+                        s.getId(), s.getAssignedKeeper(), s.getAnimalId(), s.getFoodId(),
+                        s.getFeedingTime(), String.format("%.2f", s.getQuantityKg()),
+                        s.getNotes(), s.isCompleted() ? "✓ Done" : "Pending"
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(dashboardFrame, "Error loading schedules: " + e.getMessage(), "Data Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        JTable table = makeStyledTable(model);
+        JScrollPane scroll = new JScrollPane(table);
+        styleScrollPane(scroll);
+
+        // ── Button panel ──────────────────────────────────────────────────────
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnPanel.setBackground(BG_DARK);
+
+        // Mark as Done — available to all logged-in staff
+        JButton doneBtn = makeSmallButton("✓ Mark Done", ACCENT_GREEN);
+        doneBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(dashboardFrame, "Please select a schedule to mark as done.");
+                return;
+            }
+            String status = (String) model.getValueAt(row, 7);
+            if ("✓ Done".equals(status)) {
+                JOptionPane.showMessageDialog(dashboardFrame, "Already marked as done.");
+                return;
+            }
+            Schedule target = zoo.getSchedules().get(row);
+            target.markCompleted();
+            model.setValueAt("✓ Done", row, 7);
+            JOptionPane.showMessageDialog(dashboardFrame, "Schedule marked as done!");
+        });
+        btnPanel.add(doneBtn);
+
+        if (zoo.getLoggedInStaff() instanceof Manager) {
+            JButton addBtn = makeSmallButton("+ Add Schedule", ACCENT_GREEN);
+            addBtn.addActionListener(e -> {
+                JTextField staffIdF   = new JTextField();
+                JTextField animalIdF  = new JTextField();
+                JTextField foodIdF    = new JTextField();
+                JTextField timeF      = new JTextField("08:00:00");
+                JTextField qtyF       = new JTextField();
+                JTextField notesF     = new JTextField();
+
+                Object[] fields = {
+                        "Staff ID:", staffIdF, "Animal ID:", animalIdF,
+                        "Food ID:", foodIdF, "Feeding Time (HH:MM:SS):", timeF,
+                        "Quantity (kg):", qtyF, "Notes:", notesF
+                };
+
+                int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
+                        "Add New Schedule", JOptionPane.OK_CANCEL_OPTION);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        String staffIdS  = staffIdF.getText().trim();
+                        String animalIdS = animalIdF.getText().trim();
+                        String foodIdS   = foodIdF.getText().trim();
+                        String time      = timeF.getText().trim();
+                        String qtyS      = qtyF.getText().trim();
+                        String notes     = notesF.getText().trim();
+
+                        // ── Blank checks ──────────────────────────────────────
+                        if (staffIdS.isEmpty())  throw new ZooException("Staff ID cannot be blank.");
+                        if (animalIdS.isEmpty()) throw new ZooException("Animal ID cannot be blank.");
+                        if (foodIdS.isEmpty())   throw new ZooException("Food ID cannot be blank.");
+                        if (time.isEmpty())      throw new ZooException("Feeding time cannot be blank.");
+                        if (qtyS.isEmpty())      throw new ZooException("Quantity cannot be blank.");
+
+                        // ── Parse IDs ─────────────────────────────────────────
+                        int staffId, animalId, foodId;
+                        try { staffId  = Integer.parseInt(staffIdS); }
+                        catch (NumberFormatException ex) { throw new ZooException("Staff ID must be a whole number."); }
+
+                        try { animalId = Integer.parseInt(animalIdS); }
+                        catch (NumberFormatException ex) { throw new ZooException("Animal ID must be a whole number."); }
+
+                        try { foodId   = Integer.parseInt(foodIdS); }
+                        catch (NumberFormatException ex) { throw new ZooException("Food ID must be a whole number."); }
+
+                        // ── Parse quantity ────────────────────────────────────
+                        float qty;
+                        try { qty = Float.parseFloat(qtyS); }
+                        catch (NumberFormatException ex) { throw new ZooException("Quantity must be a number (e.g. 2.5)."); }
+
+                        // ── Range / format checks ─────────────────────────────
+                        if (staffId  <= 0) throw new ZooException("Staff ID must be a positive number.");
+                        if (animalId <= 0) throw new ZooException("Animal ID must be a positive number.");
+                        if (foodId   <= 0) throw new ZooException("Food ID must be a positive number.");
+                        if (qty      <= 0) throw new ZooException("Quantity must be greater than 0.");
+                        if (notes.length() > 200) throw new ZooException("Notes must be 200 characters or fewer.");
+
+                        // ── Time format: HH:MM:SS ─────────────────────────────
+                        if (!time.matches("^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"))
+                            throw new ZooException("Feeding time must be in HH:MM:SS format (e.g. 08:30:00).");
+
+                        Schedule newSch = new Schedule(0, animalId, staffId, foodId, time, qty, notes, false);
+                        zoo.getSchedules().add(newSch);
+                        model.addRow(new Object[]{0, staffId, animalId, foodId, time,
+                                String.format("%.2f", qty), notes, "Pending"});
+                        JOptionPane.showMessageDialog(dashboardFrame, "Schedule added!");
+
+                    } catch (ZooException ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame, ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame, "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+
+            JButton delBtn = makeSmallButton("- Remove Schedule", ACCENT_RED);
+            delBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(dashboardFrame, "Please select a schedule to remove.");
+                    return;
+                }
+                int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
+                        "Remove selected schedule?", "Confirm", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    zoo.getSchedules().remove(row);
+                    model.removeRow(row);
+                }
+            });
+
+            btnPanel.add(addBtn);
+            btnPanel.add(delBtn);
+        }
+
+        JLabel header = makeTabHeader("Feeding Schedules  (" + model.getRowCount() + " items)");
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(BG_DARK);
+        top.add(header, BorderLayout.WEST);
+        top.add(btnPanel, BorderLayout.EAST);
+
+        panel.add(top, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
@@ -430,25 +821,118 @@ public class ZooLoginGUI {
         try {
             for (com.zoo.interfaces.IStaff s : zoo.getUsers()) {
                 model.addRow(new Object[]{
-                    s.getId(),
-                    s.getName(),
-                    s.getClass().getSimpleName(),
-                    s.getUsername(),
-                    s.isActive() ? "✓" : "✗"
+                        s.getId(), s.getName(), s.getClass().getSimpleName(),
+                        s.getUsername(), s.isActive() ? "✓" : "✗"
                 });
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(dashboardFrame,
-                "Error loading staff: " + e.getMessage(),
-                "Data Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(dashboardFrame, "Error loading staff: " + e.getMessage(), "Data Error", JOptionPane.ERROR_MESSAGE);
         }
 
         JTable table = makeStyledTable(model);
         JScrollPane scroll = new JScrollPane(table);
         styleScrollPane(scroll);
 
+        // ── Button panel ──────────────────────────────────────────────────────
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnPanel.setBackground(BG_DARK);
+
+        JButton addBtn = makeSmallButton("+ Add Staff", ACCENT_GREEN);
+        addBtn.addActionListener(e -> {
+            JTextField nameF     = new JTextField();
+            JTextField emailF    = new JTextField();
+            JTextField passF     = new JPasswordField();
+            JTextField salaryF   = new JTextField();
+            String[] roles       = {"Keeper", "Manager"};
+            JComboBox<String> roleBox = new JComboBox<>(roles);
+
+            Object[] fields = {
+                    "Full Name:", nameF, "Email:", emailF,
+                    "Password (min 8):", passF, "Salary:", salaryF,
+                    "Role:", roleBox
+            };
+
+            int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
+                    "+ Add New Staff", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    String name   = nameF.getText().trim();
+                    String email  = emailF.getText().trim();
+                    String pass   = passF.getText().trim();
+                    String salaryS = salaryF.getText().trim();
+                    String role   = (String) roleBox.getSelectedItem();
+
+                    // ── Blank checks ──────────────────────────────────────
+                    if (name.isEmpty())    throw new ZooException("Full name cannot be blank.");
+                    if (email.isEmpty())   throw new ZooException("Email cannot be blank.");
+                    if (pass.isEmpty())    throw new ZooException("Password cannot be blank.");
+                    if (salaryS.isEmpty()) throw new ZooException("Salary cannot be blank.");
+
+                    // ── Name must not be numeric ──────────────────────────
+                    zoo.validateName("Full Name", name);
+
+                    // ── Email format ──────────────────────────────────────
+                    if (!email.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$"))
+                        throw new ZooException("Please enter a valid email address.");
+
+                    // ── Password strength ─────────────────────────────────
+                    if (pass.length() < 8)
+                        throw new ZooException("Password must be at least 8 characters.");
+
+                    // ── Parse salary ──────────────────────────────────────
+                    float salary;
+                    try { salary = Float.parseFloat(salaryS); }
+                    catch (NumberFormatException ex) { throw new ZooException("Salary must be a valid number (e.g. 1500.00)."); }
+
+                    if (salary <= 0) throw new ZooException("Salary must be greater than 0.");
+
+                    zoo.createStaff(name, role, email, pass, salary);
+                    Staff added = zoo.getUsers().get(zoo.getUsers().size() - 1);
+                    model.addRow(new Object[]{added.getId(), name, role, email, "✓"});
+                    JOptionPane.showMessageDialog(dashboardFrame, role + " added successfully!");
+
+                } catch (InvalidNameException ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame, ex.getMessage(), "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                } catch (ZooException ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame, ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame, "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        JButton delBtn = makeSmallButton("- Remove Staff", ACCENT_RED);
+        delBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(dashboardFrame, "Please select a staff member to remove.");
+                return;
+            }
+            int staffId = (int) model.getValueAt(row, 0);
+            String name = (String) model.getValueAt(row, 1);
+            int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
+                    "Remove " + name + "?", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    zoo.removeStaff(staffId);
+                    model.removeRow(row);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        btnPanel.add(addBtn);
+        btnPanel.add(delBtn);
+
         JLabel header = makeTabHeader("Staff Directory  (" + model.getRowCount() + " members)");
-        panel.add(header, BorderLayout.NORTH);
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(BG_DARK);
+        top.add(header, BorderLayout.WEST);
+        top.add(btnPanel, BorderLayout.EAST);
+
+        panel.add(top, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
@@ -552,5 +1036,13 @@ public class ZooLoginGUI {
     private void setStatus(String message, Color color) {
         statusLabel.setText(message);
         statusLabel.setForeground(color);
+    }
+
+    // Helper method — add this to your UI helpers
+    private JPanel wrapCenter(JComponent component) {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(BG_CARD);
+        wrapper.add(component, BorderLayout.CENTER);
+        return wrapper;
     }
 }

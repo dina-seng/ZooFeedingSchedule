@@ -5,12 +5,9 @@ public class Animal {
     private String name;
     private String species;
     private double weight;
-    private static int nextId = 1;
     private String habitatName;
 
     public Animal(String name, int age, String species, double weight) {
-        this.id = nextId;
-        nextId++;
         setName(name);
         setAge(age);
         setSpecies(species);
@@ -24,7 +21,6 @@ public class Animal {
     public int getAge() { return age; }
     public String getSpecies() { return species; }
     public double getWeight() { return weight; }
-    public static int getNextId() { return nextId;}
 
     // Helpers
     private boolean isBlank(String s) {

@@ -12,7 +12,7 @@ public class FoodDAO {
 
     public List<Food> getInventory() throws ZooException {
         List<Food> list = new ArrayList<>();
-        String sql = "SELECT food_id, name, food_category, calories_per_kg FROM food";
+        String sql = "SELECT food_id, name, stock, expiry_date, costPerUnit FROM food";
 
         try (Connection conn = MySqlDatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -21,17 +21,16 @@ public class FoodDAO {
             while (rs.next()) {
                 int    id       = rs.getInt("food_id");
                 String name     = rs.getString("name");
-                double calories = rs.getDouble("calories_per_kg");
+                int    stock    = rs.getInt("stock");
+                String expiry   = rs.getString("expiry_date");
+                double cost     = rs.getDouble("costPerUnit");
 
-                // Your Food constructor: (name, stock, expiryDate, costPerUnit)
-                // Schema has no stock/expiry/cost — use safe defaults
-                Food f = new Food(name, 100.0, "2027-12-31", calories);
+                Food f = new Food(name, stock, expiry, cost);
                 f.setId(id);
                 list.add(f);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace(); // keep this during dev
             throw new ZooException("Food loading failed: " + e.getMessage());
         }
         return list;
