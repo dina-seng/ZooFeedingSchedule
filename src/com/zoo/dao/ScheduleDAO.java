@@ -15,7 +15,7 @@ public class ScheduleDAO {
         List<Schedule> schedules = new ArrayList<>();
 
         // Select all required fields
-        String sql = "SELECT fs.schedule_id,h.name as habitat_name, fs.staff_id, fs.food_id, " +
+        String sql = "SELECT fs.schedule_id, fs.habitat_id, fs.staff_id, fs.food_id, " +
                 "fs.feeding_time, fs.quantity_kg, fs.notes, fs.completed, " +
                 "st.first_name, st.last_name, st.email " +
                 "FROM feeding_schedule fs " +
