@@ -1,14 +1,13 @@
 package com.zoo.dao;
 
+import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
 import com.zoo.exceptions.ZooException;
+import com.zoo.models.Schedule;
 import com.zoo.models.staff_roles.Keeper;
 import com.zoo.models.staff_roles.Staff;
-import com.zoo.models.Schedule;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
 
 public class ScheduleDAO {
 
@@ -16,7 +15,7 @@ public class ScheduleDAO {
         List<Schedule> schedules = new ArrayList<>();
 
         // Select all required fields
-        String sql = "SELECT fs.schedule_id, fs.habitat_id, fs.staff_id, fs.food_id, " +
+        String sql = "SELECT fs.schedule_id,h.name as habitat_name, fs.staff_id, fs.food_id, " +
                 "fs.feeding_time, fs.quantity_kg, fs.notes, fs.completed, " +
                 "st.first_name, st.last_name, st.email " +
                 "FROM feeding_schedule fs " +
@@ -74,7 +73,8 @@ public class ScheduleDAO {
     }
 
     public void deleteSchedule(int scheduleId) throws ZooException {
-        String sql = "DELETE FROM schedules WHERE schedule_id = ?";
+        String sql = "DELETE FROM feeding_schedule WHERE schedule_id = ?";
+        //change from schedules to feeding_schedule
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, scheduleId);

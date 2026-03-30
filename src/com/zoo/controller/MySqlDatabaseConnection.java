@@ -8,7 +8,7 @@ public class MySqlDatabaseConnection {
     // Update these to match your MySQL Workbench settings
     private static final String URL = "jdbc:mysql://localhost:3306/zoofeedingschedule";
     private static final String USER = "root"; 
-    private static final String PASSWORD = "&&&&"; 
+    private static final String PASSWORD = "dyy007kh"; 
 
     public static Connection getConnection() throws SQLException {
         try {

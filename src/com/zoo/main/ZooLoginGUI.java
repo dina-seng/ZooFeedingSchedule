@@ -9,7 +9,6 @@ import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.staff_roles.Manager;
 import com.zoo.models.staff_roles.Staff;
 import com.zoo.services.Zoo;
-
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -1354,7 +1353,7 @@ public class ZooLoginGUI {
                 catch (NumberFormatException ex) {
                     throw new ZooException("Quantity must be a number (e.g. 2.5).");
                 }
-
+                
                 // ── Range / format checks ─────────────────────────────────────
                 if (staffId <= 0) throw new ZooException("Staff ID must be a positive number.");
                 if (foodId  <= 0) throw new ZooException("Food ID must be a positive number.");
