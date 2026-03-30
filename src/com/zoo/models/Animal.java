@@ -28,6 +28,10 @@ public class Animal {
     }
 
     // Setters
+    public void setId(int id) { 
+        this.id = id; 
+    }
+
     public void setName(String name) {
         if (isBlank(name)) this.name = "Unknown";
         else this.name = name;

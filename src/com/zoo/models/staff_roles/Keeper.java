@@ -11,7 +11,8 @@ public class Keeper extends Staff {
 
     @Override
     public boolean can(String action) {
-        return action.equals(Zoo.ANIMAL_MANAGE) || action.equals(Zoo.VIEW_REPORT) || action.equals(Zoo.HABITAT_MANAGE);
+        return action.equals(Zoo.ANIMAL_MANAGE) || action.equals(Zoo.VIEW_REPORT)
+                || action.equals(Zoo.HABITAT_MANAGE) || action.equals(Zoo.SCHEDULE_MANAGE);
     }
 
     // Constructor

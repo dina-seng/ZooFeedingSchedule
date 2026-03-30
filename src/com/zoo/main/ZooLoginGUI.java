@@ -9,6 +9,7 @@ import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.staff_roles.Manager;
 import com.zoo.models.staff_roles.Staff;
 import com.zoo.services.Zoo;
+
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -58,9 +59,7 @@ public class ZooLoginGUI {
     private static final Font  FONT_BUTTON  = new Font("Segoe UI Emoji", Font.BOLD, 14);
     private static final Font  FONT_SMALL   = new Font("Segoe UI Emoji", Font.PLAIN, 12);
 
-    // ─────────────────────────────────────────────────────────────────────────
     // ENTRY POINT
-    // ─────────────────────────────────────────────────────────────────────────
     public static void main(String[] args) {
         // Run on the Swing Event Dispatch Thread (EDT) — best practice
         SwingUtilities.invokeLater(() -> {
@@ -71,30 +70,24 @@ public class ZooLoginGUI {
         });
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // INIT — creates Zoo OOP object then shows login window
-    // ─────────────────────────────────────────────────────────────────────────
     private void initApp() {
         // LO5 finally — guaranteed cleanup/message even if Zoo constructor fails
         try {
             zoo = new Zoo("Safari Zoo", "Phnom Penh");
         } catch (Exception e) {
             // LO4 multiple catch — runtime exception separate from our custom one
-            e.printStackTrace(); // 👈 VERY IMPORTANT
             JOptionPane.showMessageDialog(null,
                 "Failed to initialize Zoo system:\n" + e.getMessage(),
                 "Startup Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         } finally {
-            // finally always runs — good place for guaranteed startup log
             System.out.println("[System] Zoo initialization attempt complete.");
         }
         buildLoginScreen();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // LOGIN SCREEN
-    // ─────────────────────────────────────────────────────────────────────────
     private void buildLoginScreen() {
         loginFrame = new JFrame("Safari Zoo — Staff Login");
         loginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -144,7 +137,15 @@ public class ZooLoginGUI {
         card.add(Box.createVerticalStrut(6));
         emailField = makeTextField("e.g. admin@zoo.com");
         emailField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
-        emailField.setAlignmentX(Component.LEFT_ALIGNMENT);             
+        emailField.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // ADD THIS — validate email on every keystroke
+        emailField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e)  { validateEmailLive(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e)  { validateEmailLive(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { validateEmailLive(); }
+        });
+
         card.add(emailField);
         card.add(Box.createVerticalStrut(16));
 
@@ -153,7 +154,16 @@ public class ZooLoginGUI {
         card.add(Box.createVerticalStrut(6));
         passwordField = new JPasswordField();
         styleField(passwordField);
+        passwordField.setEnabled(false);  // disabled until email is valid
         passwordField.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // ADD THIS — validate password on every keystroke
+        passwordField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e)  { validatePasswordLive(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e)  { validatePasswordLive(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { validatePasswordLive(); }
+        });
+
         card.add(passwordField);
         card.add(Box.createVerticalStrut(24));
 
@@ -190,30 +200,20 @@ public class ZooLoginGUI {
         loginFrame.setVisible(true);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // LOGIN HANDLER — demonstrates ALL exception handling learning outcomes
-    // ─────────────────────────────────────────────────────────────────────────
+    // LOGIN HANDLER
     private void handleLogin() {
-        // LO8 — read input from GUI text fields
+
         String email    = emailField.getText().trim();
         String password = new String(passwordField.getPassword()).trim();
 
-        // Disable button during processing (good UX + shows finally usage)
         loginButton.setEnabled(false);
         setStatus("Authenticating...", TEXT_MUTED);
 
-        // LO3 try-catch + LO4 multiple catch + LO5 finally
         try {
-            // LO6 throw — validateLoginInput throws ZooException for blank fields
             validateLoginInput(email, password);
-
-            // LO7 throws — zoo.login() declares throws ZooException
             zoo.login(email, password);
 
-            // ── Success ───────────────────────────────────────────────────────
             setStatus("✓ Welcome, " + zoo.getLoggedInStaff().getName() + "!", ACCENT_GREEN);
-
-            // Small delay so user sees success message, then open dashboard
             Timer timer = new Timer(800, evt -> {
                 loginFrame.setVisible(false);
                 buildDashboard();
@@ -222,50 +222,41 @@ public class ZooLoginGUI {
             timer.start();
 
         } catch (ZooException e) {
-            // LO4 — catch our CUSTOM exception type separately
-            // This catches: blank fields, wrong password, inactive staff
             setStatus("✗ " + e.getMessage(), ACCENT_RED);
             passwordField.setText("");
             passwordField.requestFocus();
 
         } catch (Exception e) {
-            // LO4 — catch unexpected runtime exceptions separately
             setStatus("✗ Unexpected error: " + e.getMessage(), ACCENT_RED);
             e.printStackTrace();
 
         } finally {
-            // LO5 — finally ALWAYS runs: re-enable button whether login passed or failed
             loginButton.setEnabled(true);
             System.out.println("[Login] Attempt finished for: " + email);
         }
     }
 
     private void validateLoginInput(String email, String password) throws ZooException {
-        // Null / blank
         if (email == null || email.isEmpty())
             throw new ZooException("Email cannot be blank.");
-        if (password == null || password.isEmpty())
-            throw new ZooException("Password cannot be blank.");
 
-        // Length caps
-        if (email.length() > 254)
-            throw new ZooException("Email address is too long.");
-        if (password.length() > 128)
-            throw new ZooException("Password is too long.");
-
-        // Proper email format
         if (!email.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$"))
             throw new ZooException("Please enter a valid email address.");
 
-        // Minimum password length
+        if (email.length() > 254)
+            throw new ZooException("Email address is too long.");
+
+        if (password == null || password.isEmpty())
+            throw new ZooException("Password cannot be blank.");
+
         if (password.length() < 8)
             throw new ZooException("Password must be at least 8 characters.");
+
+        if (password.length() > 128)
+            throw new ZooException("Password is too long.");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // DASHBOARD — shown after successful login
     // LO11 — OOP classes (Zoo, Staff, Animal, Habitat, Food) drive the content
-    // ─────────────────────────────────────────────────────────────────────────
     private void buildDashboard() {
         dashboardFrame = new JFrame("Safari Zoo — " + zoo.getLoggedInStaff().getName());
         dashboardFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -301,14 +292,28 @@ public class ZooLoginGUI {
         tabs.setForeground(TEXT_DARK);
         tabs.setFont(FONT_LABEL);
 
-        tabs.addTab("🐾  Animals",   buildAnimalsTab());
-        tabs.addTab("🌿  Habitats",  buildHabitatsTab());
-        tabs.addTab("🍖  Foods",      buildFoodTab());
-        tabs.addTab("⌛  Schedules",  buildScheduleTab());
+        if ( zoo.getLoggedInStaff().can(Zoo.ANIMAL_MANAGE)) {
+            tabs.addTab("🐾  Animals", buildAnimalsTab());
+        }
 
-        // Only show staff tab if Manager
-        if (zoo.getLoggedInStaff() instanceof Manager) {
+        if ( zoo.getLoggedInStaff().can(Zoo.HABITAT_MANAGE)) {
+            tabs.addTab("🐾  Habitats", buildHabitatsTab());
+        }
+
+        if (zoo.getLoggedInStaff().can(Zoo.SCHEDULE_MANAGE)) {
+            tabs.addTab("⌛  Schedules", ScheduleBuild());
+        }
+
+        if (zoo.getLoggedInStaff().can(Zoo.STAFF_MANAGE)) {
             tabs.addTab("👥  Staffs", buildStaffTab());
+        }
+
+        if (zoo.getLoggedInStaff().can(Zoo.FOOD_MANAGE)) {
+            tabs.addTab("🍖  Foods", buildFoodTab());
+        }
+
+        if (zoo.getLoggedInStaff().can(Zoo.VIEW_REPORT)) {
+            tabs.addTab("📊  Report", ReportBuild());
         }
 
         root.add(topBar, BorderLayout.NORTH);
@@ -467,7 +472,7 @@ public class ZooLoginGUI {
         panel.setBackground(BG_DARK);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        String[] cols = {"Habitat Name", "Type", "Capacity", "Animals Inside", "Performance"};
+        String[] cols = {"Habitat Name", "Type", "Food", "Capacity", "Animals Inside", "Performance"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -475,25 +480,159 @@ public class ZooLoginGUI {
         try {
             for (Habitat h : zoo.getHabitats()) {
                 model.addRow(new Object[]{
-                    h.getName(),
-                    h.getClass().getSimpleName(),
-                    h.getCapacity(),
-                    h.getAnimals().size(),
-                    h.getFeedingPerformance() + "%"
+                        h.getName(),
+                        h.getClass().getSimpleName(),
+                        h.getFood().getName(),
+                        h.getCapacity(),
+                        h.getAnimals().size(),
+                        h.getFeedingPerformance() + "%"
                 });
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(dashboardFrame,
-                "Error loading habitats: " + e.getMessage(),
-                "Data Error", JOptionPane.ERROR_MESSAGE);
+                    "Error loading habitats: " + e.getMessage(),
+                    "Data Error", JOptionPane.ERROR_MESSAGE);
         }
 
         JTable table = makeStyledTable(model);
         JScrollPane scroll = new JScrollPane(table);
         styleScrollPane(scroll);
 
+        // ── Button panel ──────────────────────────────────────────────────────
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnPanel.setBackground(BG_DARK);
+
+        if (zoo.getLoggedInStaff() instanceof Manager) {
+
+            // ── Add Habitat ───────────────────────────────────────────────────
+            JButton addBtn = makeSmallButton("+ Add Habitat", ACCENT_GREEN);
+            addBtn.addActionListener(e -> {
+                JTextField nameF     = new JTextField();
+                JTextField capacityF = new JTextField();
+                String[] types       = {"Forest", "Ocean", "Savannah"};
+                JComboBox<String> typeBox = new JComboBox<>(types);
+
+                String[] foodNames = zoo.getFoodInventory().stream()
+                        .map(Food::getName).toArray(String[]::new);
+                JComboBox<String> foodBox = new JComboBox<>(foodNames);
+
+                Object[] fields = {
+                        "Habitat Name:", nameF,
+                        "Type:", typeBox,
+                        "Food:", foodBox,
+                        "Capacity:", capacityF
+                };
+
+                int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
+                        "Add New Habitat", JOptionPane.OK_CANCEL_OPTION);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        String name      = nameF.getText().trim();
+                        String capacityS = capacityF.getText().trim();
+                        String type      = ((String) typeBox.getSelectedItem()).toLowerCase();
+                        int foodIdx      = foodBox.getSelectedIndex();
+
+                        // ── Blank checks ──────────────────────────────────────
+                        if (name.isEmpty())      throw new ZooException("Habitat name cannot be blank.");
+                        if (capacityS.isEmpty()) throw new ZooException("Capacity cannot be blank.");
+                        if (zoo.getFoodInventory().isEmpty())
+                            throw new ZooException("No food in inventory. Add food first.");
+
+                        zoo.validateName("Habitat Name", name);
+
+                        // ── Parse capacity ────────────────────────────────────
+                        int capacity;
+                        try { capacity = Integer.parseInt(capacityS); }
+                        catch (NumberFormatException ex) {
+                            throw new ZooException("Capacity must be a whole number (e.g. 10).");
+                        }
+                        if (capacity <= 0) throw new ZooException("Capacity must be greater than 0.");
+
+                        // ── Duplicate check ───────────────────────────────────
+                        boolean exists = zoo.getHabitats().stream()
+                                .anyMatch(h -> h.getName().equalsIgnoreCase(name));
+                        if (exists) throw new ZooException("A habitat with that name already exists.");
+
+                        Food selectedFood = zoo.getFoodInventory().get(foodIdx);
+                        zoo.createHabitat(name, type, capacity, selectedFood);
+
+                        Habitat added = zoo.getHabitats().get(zoo.getHabitats().size() - 1);
+                        model.addRow(new Object[]{
+                                added.getName(),
+                                added.getClass().getSimpleName(),
+                                added.getFood().getName(),
+                                added.getCapacity(),
+                                0,
+                                added.getFeedingPerformance() + "%"
+                        });
+                        JOptionPane.showMessageDialog(dashboardFrame, "Habitat added successfully!");
+
+                    } catch (InvalidNameException ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                ex.getMessage(), "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                    } catch (ZooException ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+
+            // ── Remove Habitat ────────────────────────────────────────────────
+            JButton delBtn = makeSmallButton("- Remove Habitat", ACCENT_RED);
+            delBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            "Please select a habitat to remove.");
+                    return;
+                }
+
+                String habitatName = (String) model.getValueAt(row, 0);
+                int animalsInside  = (int)    model.getValueAt(row, 4);
+
+                if (animalsInside > 0) {
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            "Cannot remove \"" + habitatName + "\": " + animalsInside +
+                                    " animal(s) still inside. Relocate them first.",
+                            "Removal Blocked", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
+                        "Remove habitat \"" + habitatName + "\"?",
+                        "Confirm Removal", JOptionPane.YES_NO_OPTION);
+
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        zoo.removeHabitat(habitatName);
+                        model.removeRow(row);
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                "\"" + habitatName + "\" removed successfully.");
+                    } catch (ZooException ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dashboardFrame,
+                                "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+
+            btnPanel.add(addBtn);
+            btnPanel.add(delBtn);
+        }
+
         JLabel header = makeTabHeader("Active Habitats  (" + model.getRowCount() + " total)");
-        panel.add(header, BorderLayout.NORTH);
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(BG_DARK);
+        top.add(header,   BorderLayout.WEST);
+        top.add(btnPanel, BorderLayout.EAST);
+
+        panel.add(top,    BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
@@ -651,162 +790,6 @@ public class ZooLoginGUI {
         return panel;
     }
 
-    private JPanel buildScheduleTab() {
-        JPanel panel = new JPanel(new BorderLayout(0, 0));
-        panel.setBackground(BG_DARK);
-        panel.setBorder(new EmptyBorder(16, 16, 16, 16));
-
-        String[] cols = {"ID", "StaffId", "AnimalId", "FoodId", "Feeding Time", "Quantity (kg)", "Notes", "Status"};
-        DefaultTableModel model = new DefaultTableModel(cols, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
-        };
-
-        try {
-            for (Schedule s : zoo.getSchedules()) {
-                model.addRow(new Object[]{
-                        s.getId(), s.getAssignedKeeper(), s.getAnimalId(), s.getFoodId(),
-                        s.getFeedingTime(), String.format("%.2f", s.getQuantityKg()),
-                        s.getNotes(), s.isCompleted() ? "✓ Done" : "Pending"
-                });
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(dashboardFrame, "Error loading schedules: " + e.getMessage(), "Data Error", JOptionPane.ERROR_MESSAGE);
-        }
-
-        JTable table = makeStyledTable(model);
-        JScrollPane scroll = new JScrollPane(table);
-        styleScrollPane(scroll);
-
-        // ── Button panel ──────────────────────────────────────────────────────
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        btnPanel.setBackground(BG_DARK);
-
-        // Mark as Done — available to all logged-in staff
-        JButton doneBtn = makeSmallButton("✓ Mark Done", ACCENT_GREEN);
-        doneBtn.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row == -1) {
-                JOptionPane.showMessageDialog(dashboardFrame, "Please select a schedule to mark as done.");
-                return;
-            }
-            String status = (String) model.getValueAt(row, 7);
-            if ("✓ Done".equals(status)) {
-                JOptionPane.showMessageDialog(dashboardFrame, "Already marked as done.");
-                return;
-            }
-            Schedule target = zoo.getSchedules().get(row);
-            target.markCompleted();
-            model.setValueAt("✓ Done", row, 7);
-            JOptionPane.showMessageDialog(dashboardFrame, "Schedule marked as done!");
-        });
-        btnPanel.add(doneBtn);
-
-        if (zoo.getLoggedInStaff() instanceof Manager) {
-            JButton addBtn = makeSmallButton("+ Add Schedule", ACCENT_GREEN);
-            addBtn.addActionListener(e -> {
-                JTextField staffIdF   = new JTextField();
-                JTextField animalIdF  = new JTextField();
-                JTextField foodIdF    = new JTextField();
-                JTextField timeF      = new JTextField("08:00:00");
-                JTextField qtyF       = new JTextField();
-                JTextField notesF     = new JTextField();
-
-                Object[] fields = {
-                        "Staff ID:", staffIdF, "Animal ID:", animalIdF,
-                        "Food ID:", foodIdF, "Feeding Time (HH:MM:SS):", timeF,
-                        "Quantity (kg):", qtyF, "Notes:", notesF
-                };
-
-                int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
-                        "Add New Schedule", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result == JOptionPane.OK_OPTION) {
-                    try {
-                        String staffIdS  = staffIdF.getText().trim();
-                        String animalIdS = animalIdF.getText().trim();
-                        String foodIdS   = foodIdF.getText().trim();
-                        String time      = timeF.getText().trim();
-                        String qtyS      = qtyF.getText().trim();
-                        String notes     = notesF.getText().trim();
-
-                        // ── Blank checks ──────────────────────────────────────
-                        if (staffIdS.isEmpty())  throw new ZooException("Staff ID cannot be blank.");
-                        if (animalIdS.isEmpty()) throw new ZooException("Animal ID cannot be blank.");
-                        if (foodIdS.isEmpty())   throw new ZooException("Food ID cannot be blank.");
-                        if (time.isEmpty())      throw new ZooException("Feeding time cannot be blank.");
-                        if (qtyS.isEmpty())      throw new ZooException("Quantity cannot be blank.");
-
-                        // ── Parse IDs ─────────────────────────────────────────
-                        int staffId, animalId, foodId;
-                        try { staffId  = Integer.parseInt(staffIdS); }
-                        catch (NumberFormatException ex) { throw new ZooException("Staff ID must be a whole number."); }
-
-                        try { animalId = Integer.parseInt(animalIdS); }
-                        catch (NumberFormatException ex) { throw new ZooException("Animal ID must be a whole number."); }
-
-                        try { foodId   = Integer.parseInt(foodIdS); }
-                        catch (NumberFormatException ex) { throw new ZooException("Food ID must be a whole number."); }
-
-                        // ── Parse quantity ────────────────────────────────────
-                        float qty;
-                        try { qty = Float.parseFloat(qtyS); }
-                        catch (NumberFormatException ex) { throw new ZooException("Quantity must be a number (e.g. 2.5)."); }
-
-                        // ── Range / format checks ─────────────────────────────
-                        if (staffId  <= 0) throw new ZooException("Staff ID must be a positive number.");
-                        if (animalId <= 0) throw new ZooException("Animal ID must be a positive number.");
-                        if (foodId   <= 0) throw new ZooException("Food ID must be a positive number.");
-                        if (qty      <= 0) throw new ZooException("Quantity must be greater than 0.");
-                        if (notes.length() > 200) throw new ZooException("Notes must be 200 characters or fewer.");
-
-                        // ── Time format: HH:MM:SS ─────────────────────────────
-                        if (!time.matches("^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"))
-                            throw new ZooException("Feeding time must be in HH:MM:SS format (e.g. 08:30:00).");
-
-                        Schedule newSch = new Schedule(0, animalId, staffId, foodId, time, qty, notes, false);
-                        zoo.getSchedules().add(newSch);
-                        model.addRow(new Object[]{0, staffId, animalId, foodId, time,
-                                String.format("%.2f", qty), notes, "Pending"});
-                        JOptionPane.showMessageDialog(dashboardFrame, "Schedule added!");
-
-                    } catch (ZooException ex) {
-                        JOptionPane.showMessageDialog(dashboardFrame, ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(dashboardFrame, "Unexpected error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            });
-
-            JButton delBtn = makeSmallButton("- Remove Schedule", ACCENT_RED);
-            delBtn.addActionListener(e -> {
-                int row = table.getSelectedRow();
-                if (row == -1) {
-                    JOptionPane.showMessageDialog(dashboardFrame, "Please select a schedule to remove.");
-                    return;
-                }
-                int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
-                        "Remove selected schedule?", "Confirm", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    zoo.getSchedules().remove(row);
-                    model.removeRow(row);
-                }
-            });
-
-            btnPanel.add(addBtn);
-            btnPanel.add(delBtn);
-        }
-
-        JLabel header = makeTabHeader("Feeding Schedules  (" + model.getRowCount() + " items)");
-        JPanel top = new JPanel(new BorderLayout());
-        top.setBackground(BG_DARK);
-        top.add(header, BorderLayout.WEST);
-        top.add(btnPanel, BorderLayout.EAST);
-
-        panel.add(top, BorderLayout.NORTH);
-        panel.add(scroll, BorderLayout.CENTER);
-        return panel;
-    }
-
     // ── Staff tab (Manager only) ──────────────────────────────────────────────
     private JPanel buildStaffTab() {
         JPanel panel = new JPanel(new BorderLayout(0, 0));
@@ -937,9 +920,104 @@ public class ZooLoginGUI {
         return panel;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Schedule tab (Manager only) ──────────────────────────────────────────────
+    public JPanel ScheduleBuild() {
+        JPanel panel = new JPanel(new BorderLayout(0, 0));
+        panel.setBackground(BG_DARK);
+        panel.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        // ── Table ─────────────────────────────────────────────────────────────
+        String[] cols = {"ID", "Staff ID", "Habitat", "Food ID",
+                "Feeding Time", "Qty (kg)", "Notes", "Status"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        try {
+            for (Schedule s : zoo.getSchedules()) {
+                model.addRow(new Object[]{
+                        s.getId(),
+                        s.getAssignedKeeper(),
+                        s.getAnimalId(),    // used as habitatId in your schema
+                        s.getFoodId(),
+                        s.getFeedingTime(),
+                        String.format("%.2f", s.getQuantityKg()),
+                        s.getNotes() != null ? s.getNotes() : "—",
+                        s.isCompleted() ? "✓ Done" : "Pending"
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(dashboardFrame,
+                    "Error loading schedules: " + e.getMessage(),
+                    "Data Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        JTable table = makeStyledTable(model);
+        JScrollPane scroll = new JScrollPane(table);
+        styleScrollPane(scroll);
+
+        // ── Button panel ──────────────────────────────────────────────────────
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        btnPanel.setBackground(BG_DARK);
+
+        // Mark Done — all roles
+        JButton doneBtn = makeSmallButton("✓ Mark Done", ACCENT_GREEN);
+        doneBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(dashboardFrame,
+                        "Please select a schedule to mark as done.");
+                return;
+            }
+            if ("✓ Done".equals(model.getValueAt(row, 7))) {
+                JOptionPane.showMessageDialog(dashboardFrame, "Already marked as done.");
+                return;
+            }
+            // Match by schedule ID (col 0), not row index — safe against reordering
+            int scheduleId = (int) model.getValueAt(row, 0);
+            zoo.getSchedules().stream()
+                    .filter(s -> s.getId() == scheduleId)
+                    .findFirst()
+                    .ifPresent(Schedule::markCompleted);
+            model.setValueAt("✓ Done", row, 7);
+        });
+        btnPanel.add(doneBtn);
+
+        // Add / Remove — Manager only
+        if (zoo.getLoggedInStaff().can(Zoo.HABITAT_MANAGE)) {
+            btnPanel.add(makeAddButton(model));
+            btnPanel.add(makeRemoveButton(table, model));
+        }
+
+        // ── Header row ────────────────────────────────────────────────────────
+        JLabel header = new JLabel("Feeding Schedules  (" + model.getRowCount() + " items)");
+        header.setFont(new Font("Segoe UI Emoji", Font.BOLD, 15));
+        header.setForeground(TEXT_WHITE);
+        header.setBorder(new EmptyBorder(0, 0, 12, 0));
+
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(BG_DARK);
+        top.add(header,   BorderLayout.WEST);
+        top.add(btnPanel, BorderLayout.EAST);
+
+        panel.add(top,    BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    // ── Report tab (Manager only) ──────────────────────────────────────────────
+    public JPanel ReportBuild() {
+        JPanel panel = new JPanel(new BorderLayout(0, 12));
+        panel.setBackground(BG_DARK);
+        panel.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        panel.add(makeNorth(),        BorderLayout.NORTH);
+        panel.add(makeTable(),        BorderLayout.CENTER);
+        panel.add(makeSouth(panel),   BorderLayout.SOUTH);
+        return panel;
+    }
+
     // LOGOUT HANDLER
-    // ─────────────────────────────────────────────────────────────────────────
     private void handleLogout() {
         // LO3 try-catch on logout too
         try {
@@ -961,9 +1039,7 @@ public class ZooLoginGUI {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // UI HELPER METHODS
-    // ─────────────────────────────────────────────────────────────────────────
     private JLabel makeFieldLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(FONT_LABEL);
@@ -985,8 +1061,8 @@ public class ZooLoginGUI {
         field.setForeground(TEXT_WHITE);
         field.setCaretColor(TEXT_WHITE);
         field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(84, 110, 122), 1),
-            new EmptyBorder(8, 12, 8, 12)
+                BorderFactory.createLineBorder(new Color(84, 110, 122), 1),
+                new EmptyBorder(8, 12, 8, 12)
         ));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1045,4 +1121,317 @@ public class ZooLoginGUI {
         wrapper.add(component, BorderLayout.CENTER);
         return wrapper;
     }
+
+    private void highlightFieldError(JTextField field) {
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ACCENT_RED, 2),
+                new EmptyBorder(8, 12, 8, 12)
+        ));
+        field.setBackground(new Color(80, 40, 40));
+    }
+
+    private void validateEmailLive() {
+        String email = emailField.getText().trim();
+        if (email.isEmpty() || !email.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$") || email.length() > 254) {
+            highlightFieldError(emailField);
+            passwordField.setEnabled(false);
+            loginButton.setEnabled(false);
+            return;
+        }
+        resetFieldStyle(emailField);
+        resetFieldStyle(passwordField);
+    }
+
+    private void validatePasswordLive() {
+        String password = new String(passwordField.getPassword()).trim();
+
+        if (password.length() < 8 || password.length() > 128) {
+            highlightFieldError(passwordField);
+            loginButton.setEnabled(false);  // lock login button
+            return;
+        }
+
+        // Password is valid — unlock login button
+        resetFieldStyle(passwordField);
+        loginButton.setEnabled(true);
+    }
+
+    private void resetFieldStyle(JTextField field) {
+        field.setEnabled(true);
+        styleField(field);
+    }
+
+    private JPanel makeStatCard(String label, String value, Color accent) {
+        JPanel card = new JPanel(new BorderLayout(0, 6));
+        card.setBackground(BG_CARD);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 3, 0, 0, accent),
+                new EmptyBorder(14, 16, 14, 16)
+        ));
+        JLabel valLabel = new JLabel(value);
+        valLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 22));
+        valLabel.setForeground(accent);
+
+        JLabel lblLabel = new JLabel(label);
+        lblLabel.setFont(FONT_SMALL);
+        lblLabel.setForeground(TEXT_MUTED);
+
+        card.add(valLabel, BorderLayout.CENTER);
+        card.add(lblLabel, BorderLayout.SOUTH);
+        return card;
+    }
+
+    // NORTH — header label + two rows of stat cards
+    private JPanel makeNorth() {
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBackground(BG_DARK);
+
+        JLabel header = new JLabel("Zoo Summary Report");
+        header.setFont(new Font("Segoe UI Empji", Font.BOLD, 15));
+        header.setForeground(TEXT_WHITE);
+        header.setBorder(new EmptyBorder(0, 0, 12, 0));
+        wrapper.add(header);
+
+        // Row 1: Staff | Habitats | Animals
+        JPanel row1 = new JPanel(new GridLayout(1, 3, 12, 0));
+        row1.setBackground(BG_DARK);
+        row1.add(makeStatCard("👥  Total Staff",
+                String.valueOf(zoo.getUsers().size()),    new Color(33, 150, 243)));
+        row1.add(makeStatCard("🌿  Habitats",
+                String.valueOf(zoo.getHabitats().size()), new Color(76, 175, 80)));
+        row1.add(makeStatCard("🐾  Animals",
+                String.valueOf(zoo.getAnimals().size()),  new Color(255, 152, 0)));
+
+        // Row 2: Food items | Schedules summary
+        JPanel row2 = new JPanel(new GridLayout(1, 2, 12, 0));
+        row2.setBackground(BG_DARK);
+        long done = zoo.getSchedules().stream().filter(Schedule::isCompleted).count();
+        row2.add(makeStatCard("🍖  Food Items",
+                String.valueOf(zoo.getFoodInventory().size()), new Color(233, 30, 99)));
+        row2.add(makeStatCard("⌛  Schedules",
+                zoo.getSchedules().size() + " total  |  " + done + " done",
+                new Color(156, 39, 176)));
+
+        JLabel sectionLabel = new JLabel("Habitat Breakdown");
+        sectionLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
+        sectionLabel.setForeground(TEXT_MUTED);
+        sectionLabel.setBorder(new EmptyBorder(14, 0, 6, 0));
+
+        wrapper.add(row1);
+        wrapper.add(Box.createVerticalStrut(10));
+        wrapper.add(row2);
+        wrapper.add(sectionLabel);
+        return wrapper;
+    }
+
+    // CENTER — per-habitat breakdown table
+    private JScrollPane makeTable() {
+        String[] cols = {"Habitat", "Type", "Animals", "Capacity", "Food", "Performance"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+
+        try {
+            for (Habitat h : zoo.getHabitats()) {
+                model.addRow(new Object[]{
+                        h.getName(),
+                        h.getClass().getSimpleName(),
+                        h.getAnimals().size(),
+                        h.getCapacity(),
+                        h.getFood().getName(),
+                        h.getFeedingPerformance() + "%"
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(dashboardFrame,
+                    "Error building report: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        JTable table = makeStyledTable(model);
+        JScrollPane scroll = new JScrollPane(table);
+        styleScrollPane(scroll);
+        return scroll;
+    }
+
+    // SOUTH — generated-by footer + refresh button
+    private JPanel makeSouth(JPanel panel) {
+        JLabel footer = new JLabel(
+                "Generated by: " + zoo.getLoggedInStaff().getName()
+                        + "  [" + zoo.getLoggedInStaff().getClass().getSimpleName() + "]"
+                        + "   •   " + zoo.getZooName() + ", " + zoo.getAddress()
+        );
+        footer.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        footer.setForeground(TEXT_MUTED);
+        footer.setBorder(new EmptyBorder(8, 0, 0, 0));
+
+        JButton refreshBtn = makeSmallButton("↻ Refresh", TEXT_WHITE);
+        refreshBtn.addActionListener(e -> {
+            JTabbedPane tabs = (JTabbedPane) panel.getParent();
+            if (tabs != null) {
+                for (int i = 0; i < tabs.getTabCount(); i++) {
+                    if (tabs.getComponentAt(i) == panel) {
+                        tabs.setComponentAt(i, ReportBuild());
+                        tabs.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            }
+        });
+
+        JPanel btnBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        btnBar.setBackground(BG_DARK);
+        btnBar.add(refreshBtn);
+
+        JPanel south = new JPanel(new BorderLayout());
+        south.setBackground(BG_DARK);
+        south.add(footer,  BorderLayout.WEST);
+        south.add(btnBar,  BorderLayout.EAST);
+        return south;
+    }
+
+    // ADD SCHEDULE BUTTON
+    private JButton makeAddButton(DefaultTableModel model) {
+        JButton addBtn = makeSmallButton("+ Add Schedule", ACCENT_GREEN);
+
+        addBtn.addActionListener(e -> {
+            JTextField staffIdF = new JTextField();
+            JTextField foodIdF  = new JTextField();
+            JTextField timeF    = new JTextField("08:00:00");
+            JTextField qtyF     = new JTextField();
+            JTextField notesF   = new JTextField();
+
+            // Habitat dropdown — replaces raw ID field from the original code
+            String[] habitatNames = zoo.getHabitats().stream()
+                    .map(Habitat::getName).toArray(String[]::new);
+            JComboBox<String> habitatBox = new JComboBox<>(habitatNames);
+
+            Object[] fields = {
+                    "Staff ID:",                staffIdF,
+                    "Habitat:",                 habitatBox,
+                    "Food ID:",                 foodIdF,
+                    "Feeding Time (HH:MM:SS):", timeF,
+                    "Quantity (kg):",           qtyF,
+                    "Notes:",                   notesF
+            };
+
+            int result = JOptionPane.showConfirmDialog(dashboardFrame, fields,
+                    "Add New Schedule", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result != JOptionPane.OK_OPTION) return;
+
+            // LO3 try-catch on every button click
+            try {
+                String staffIdS = staffIdF.getText().trim();
+                String foodIdS  = foodIdF.getText().trim();
+                String time     = timeF.getText().trim();
+                String qtyS     = qtyF.getText().trim();
+                String notes    = notesF.getText().trim();
+
+                // ── Blank checks ──────────────────────────────────────────────
+                if (staffIdS.isEmpty()) throw new ZooException("Staff ID cannot be blank.");
+                if (foodIdS.isEmpty())  throw new ZooException("Food ID cannot be blank.");
+                if (time.isEmpty())     throw new ZooException("Feeding time cannot be blank.");
+                if (qtyS.isEmpty())     throw new ZooException("Quantity cannot be blank.");
+                if (zoo.getHabitats().isEmpty())
+                    throw new ZooException("No habitats available. Create a habitat first.");
+
+                // ── Parse IDs ─────────────────────────────────────────────────
+                int staffId, foodId;
+                try { staffId = Integer.parseInt(staffIdS); }
+                catch (NumberFormatException ex) {
+                    throw new ZooException("Staff ID must be a whole number.");
+                }
+                try { foodId = Integer.parseInt(foodIdS); }
+                catch (NumberFormatException ex) {
+                    throw new ZooException("Food ID must be a whole number.");
+                }
+
+                // ── Parse quantity ────────────────────────────────────────────
+                float qty;
+                try { qty = Float.parseFloat(qtyS); }
+                catch (NumberFormatException ex) {
+                    throw new ZooException("Quantity must be a number (e.g. 2.5).");
+                }
+
+                // ── Range / format checks ─────────────────────────────────────
+                if (staffId <= 0) throw new ZooException("Staff ID must be a positive number.");
+                if (foodId  <= 0) throw new ZooException("Food ID must be a positive number.");
+                if (qty     <= 0) throw new ZooException("Quantity must be greater than 0.");
+                if (notes.length() > 200)
+                    throw new ZooException("Notes must be 200 characters or fewer.");
+                if (!time.matches("^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"))
+                    throw new ZooException("Feeding time must be HH:MM:SS (e.g. 08:30:00).");
+
+                // ── Resolve habitat ───────────────────────────────────────────
+                Habitat selectedHab = zoo.getHabitats().get(habitatBox.getSelectedIndex());
+
+                // ── Duplicate check ───────────────────────────────────────────
+                boolean duplicate = selectedHab.getFeedingTimes().stream()
+                        .anyMatch(s -> s.getAssignedKeeper() == staffId
+                                && time.equals(s.getFeedingTime())); // null-safe: time is never null here
+                if (duplicate)
+                    throw new ZooException("Duplicate: this staff already has a schedule "
+                            + "for " + selectedHab.getName() + " at " + time + ".");
+
+                // ── Build Schedule object ─────────────────────────────────────
+                Schedule newSch = new Schedule(0, 0, staffId, foodId, time, qty, notes, false);
+
+                // ── zoo.addScheduleToHabitat() ────────────────────────────────
+                // Checks SCHEDULE_MANAGE permission + links to habitat.feedingTimes
+                zoo.addScheduleToHabitat(newSch, selectedHab);
+
+                model.addRow(new Object[]{
+                        0, staffId, selectedHab.getName(), foodId,
+                        time, String.format("%.2f", qty),
+                        notes.isEmpty() ? "—" : notes, "Pending"
+                });
+
+                JOptionPane.showMessageDialog(dashboardFrame,
+                        "Schedule added to " + selectedHab.getName() + "!");
+
+            } catch (ZooException ex) {
+                // LO4 multiple catch — permission denied, duplicate, validation
+                JOptionPane.showMessageDialog(dashboardFrame,
+                        ex.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dashboardFrame,
+                        "Unexpected error: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        return addBtn;
+    }
+
+    // REMOVE SCHEDULE BUTTON
+    private JButton makeRemoveButton(JTable table, DefaultTableModel model) {
+        JButton delBtn = makeSmallButton("- Remove Schedule", ACCENT_RED);
+
+        delBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(dashboardFrame,
+                        "Please select a schedule to remove.");
+                return;
+            }
+            int confirm = JOptionPane.showConfirmDialog(dashboardFrame,
+                    "Remove selected schedule?", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                // Match by schedule ID (col 0) — safe against reordering
+                int scheduleId = (int) model.getValueAt(row, 0);
+                try {
+                    zoo.removeSchedule(scheduleId);
+                    model.removeRow(row);
+                } catch (ZooException ex) {
+                    JOptionPane.showMessageDialog(dashboardFrame,
+                            "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        return delBtn;
+    }
 }
+

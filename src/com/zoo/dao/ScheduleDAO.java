@@ -1,6 +1,5 @@
 package com.zoo.dao;
 
-import com.zoo.controller.MySqlDatabaseConnection;
 import com.zoo.exceptions.ZooException;
 import com.zoo.models.staff_roles.Keeper;
 import com.zoo.models.staff_roles.Staff;
@@ -9,26 +8,28 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
+
 public class ScheduleDAO {
 
     public List<Schedule> getAllSchedules() throws ZooException {
         List<Schedule> schedules = new ArrayList<>();
 
         // Select all required fields
-        String sql = "SELECT fs.schedule_id, fs.animal_id, fs.staff_id, fs.food_id, " +
+        String sql = "SELECT fs.schedule_id, fs.habitat_id, fs.staff_id, fs.food_id, " +
                 "fs.feeding_time, fs.quantity_kg, fs.notes, fs.completed, " +
                 "st.first_name, st.last_name, st.email " +
                 "FROM feeding_schedule fs " +
                 "JOIN staff st ON fs.staff_id = st.staff_id";
 
-        try (Connection conn = MySqlDatabaseConnection.getConnection();
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
 
                 int scheduleId = rs.getInt("schedule_id");
-                int animalId   = rs.getInt("animal_id");
+                int habitatId = rs.getInt("habitat_id");
                 int staffId    = rs.getInt("staff_id");
                 int foodId     = rs.getInt("food_id");
                 String feedingTime = rs.getString("feeding_time");
@@ -36,13 +37,29 @@ public class ScheduleDAO {
                 String notes       = rs.getString("notes");
                 boolean completed  = rs.getBoolean("completed");
 
+                if (quantityKg <= 0) {
+                    System.err.println("Warning: Skipping schedule ID " + scheduleId
+                            + " — invalid quantity: " + quantityKg);
+                    continue;
+                }
+
+                if (feedingTime == null || feedingTime.trim().isEmpty()) {
+                    System.err.println("Warning: Skipping schedule ID " + scheduleId + " — missing feeding time.");
+                    continue;
+                }
+
+                if (habitatId <= 0 || staffId <= 0 || foodId <= 0) {
+                    System.err.println("Warning: Skipping schedule ID " + scheduleId + " — invalid IDs.");
+                    continue;
+                }
+
                 // Build Keeper object
                 String keeperName  = rs.getString("first_name") + " " + rs.getString("last_name");
                 String keeperEmail = rs.getString("email");
                 Staff keeper = new Keeper(staffId, keeperEmail, "12345678", "12345678", 500.0f);
 
                 // Build Schedule object
-                Schedule sch = new Schedule(scheduleId, animalId, staffId, foodId,
+                Schedule sch = new Schedule(scheduleId, habitatId, staffId, foodId,
                         feedingTime, quantityKg, notes, completed);
 
                 schedules.add(sch);
@@ -56,10 +73,21 @@ public class ScheduleDAO {
         return schedules;
     }
 
+    public void deleteSchedule(int scheduleId) throws ZooException {
+        String sql = "DELETE FROM schedules WHERE schedule_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, scheduleId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new ZooException("Failed to delete schedule: " + e.getMessage());
+        }
+    }
+
     // Optional: method to update completion status
     public static void updateCompletionStatus(int scheduleId, boolean completed) throws SQLException {
         String sql = "UPDATE feeding_schedule SET completed = ? WHERE schedule_id = ?";
-        try (Connection conn = MySqlDatabaseConnection.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setBoolean(1, completed);
             stmt.setInt(2, scheduleId);

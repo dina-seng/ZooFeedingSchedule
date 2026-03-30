@@ -27,7 +27,7 @@ public abstract class Habitat implements IHabitat {
     @Override public List<Schedule> getFeedingTimes() { return new ArrayList<>(feedingTimes); }
     @Override public Food getFood() { return food; }
     @Override public List<Animal> getAnimals() { return animals; } 
-    public String getId()       { return String.valueOf(this.id); }
+    public int getId()       { return id; }
     public String getName()     { return this.name; }
     public String getLocation() { return this.location; }
     public int getCapacity()    { return this.capacity; }
@@ -36,6 +36,7 @@ public abstract class Habitat implements IHabitat {
     // Setters
     public void setId(int id)           { this.id = id; }
     public void setName(String name)    { this.name = name; }
+    public void setFood(Food food) { this.food = food; }
     public void setLocation(String loc) { this.location = loc; }
     public void setCapacity(int cap)    { this.capacity = cap; }
 

@@ -19,7 +19,7 @@ public class StaffDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
            while (rs.next()) {
-                String type = rs.getString("staff_type"); // MANAGER or KEEPER 
+                String type = rs.getString("staff_type"); 
 
                 
                 
@@ -77,8 +77,8 @@ public class StaffDAO {
     } catch (SQLException e) {
         throw new ZooException("Database login error: " + e.getMessage());
     }
-    return null; // Means no match found
-}
+    throw new AuthenticationException("Login failed: email or password is incorrect.");
+  }
     public Staff createStaff(String fullName, String position, String email, String password, float salary) throws ZooException {
         String[] parts = fullName.trim().split(" ", 2);
         String firstName = parts[0];

@@ -13,8 +13,6 @@ public abstract class Staff implements IStaff, HabitatAccess{
     private boolean status;
     int id;
 
-    
-
     // Constructor
     public Staff(int id, String name, String username, String password) {
         this.id = id;
@@ -48,22 +46,9 @@ public abstract class Staff implements IStaff, HabitatAccess{
     }
 
     // Setters
-
     public void setName(String name) {
         this.name = validateName(name);
     }
-
-    public void setUsername(String username) {
-        this.username = validateUsername(username);
-    }
-
-    public void setPassword(String password) {
-        this.password = validatePassword(password);
-    }
-
-    public void setStatus(boolean status) {
-        this.status = status;
-    } 
 
     @Override
     public String toString() {

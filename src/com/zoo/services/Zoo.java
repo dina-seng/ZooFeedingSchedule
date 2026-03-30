@@ -1,11 +1,8 @@
 package com.zoo.services;
 
-
 import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
 import com.zoo.dao.*;
-import com.zoo.exceptions.InvalidHabitatException;
-import com.zoo.exceptions.InvalidNameException;
-import com.zoo.exceptions.ZooException;
+import com.zoo.exceptions.*;
 import com.zoo.models.Animal;
 import com.zoo.models.Food;
 import com.zoo.models.Schedule;
@@ -86,8 +83,6 @@ public class Zoo {
         }
     }
 
-
-
     public List<Animal> getAnimals() {
         return this.animals;
     }
@@ -103,9 +98,7 @@ public class Zoo {
     // --- HELPER METHODS ---
     public String getZooName() { return zooName; }
     public String getAddress() { return address; }
-    public String getLastMessage() { return lastMessage; }
     public List<Habitat> getHabitats() { return habitats; }
-    public boolean isStaffLoggedIn() { return loggedInUser != null; }
     public Staff getLoggedInStaff() { return loggedInUser; }
 
     private boolean isBlank(String s) {
@@ -136,21 +129,11 @@ public class Zoo {
         return true;
     }
 
-    public void registerUser(Staff newUser) {
-        users.add(newUser);
-    }
-
     // --- LOGIN SYSTEM ---
     public void login(String username, String password) throws ZooException {
         if (isBlank(username) || password == null) {
                 throw new ZooException("Login failed: missing email/password.");
             }
-
-        // Logic flow kept: search user, check active, check password
-        // Staff user = users.stream()
-        //     .filter(u -> u.getUsername().equalsIgnoreCase(username.trim()))
-        //     .findFirst()
-        //     .orElseThrow(() -> new ZooException("Login failed: username not found."));
 
         StaffDAO staffDAO = new StaffDAO(); 
         Staff user = staffDAO.login(username, password);
@@ -160,7 +143,7 @@ public class Zoo {
         }
 
         if (!user.checkPassword(password)) {
-            throw new ZooException("Login failed: wrong password.");
+            throw new AuthenticationException("Login failed: wrong password.");
         }
 
         loggedInUser = user;
@@ -180,8 +163,10 @@ public class Zoo {
                             String username, String password, float salary) throws ZooException {
         if (!requirePermission(STAFF_MANAGE)) return;
 
-        if (isBlank(username)) {
-            throw new ZooException("Cannot create staff: staffId/username is empty.");
+        validateName("Full name", fullName);
+        validateName("Username", username);
+        if (salary < 0) {
+            throw new OutOfRangeException("Salary cannot be negative.");
         }
 
         boolean exists = users.stream().anyMatch(u -> u.getUsername().equalsIgnoreCase(username.trim()));
@@ -210,117 +195,64 @@ public class Zoo {
     }
 
     // --- ANIMAL & HABITAT MANAGEMENT ---
-    public void addAnimalToHabitat(Animal animal, Habitat habitat) throws InvalidHabitatException, ZooException {
+    public void addAnimalToHabitat(Animal animal, Habitat habitat) throws ZooException {
         if (!requirePermission(ANIMAL_MANAGE)) return;
+        if (!habitat.canHouse(animal))
+            throw new InvalidHabitatException("Incompatible habitat.");
 
-        if (!habitat.canHouse(animal)) {
-            throw new InvalidHabitatException("Cannot add " + animal.getName() + " to " + habitat.getName() + ": incompatible habitat.");
-        }
-
+        animalDAO.addAnimal(animal, habitat.getName());
         habitat.getAnimals().add(animal);
-        System.out.println(animal.getName() + " added to " + habitat.getName());
+        animals.add(animal);
     }
 
     public void removeAnimalFromHabitat(Animal animal, Habitat habitat) throws ZooException {
         if (!requirePermission(ANIMAL_MANAGE)) return;
-
-        if (!getLoggedInStaff().canAccessHabitat(habitat)) {
+        if (!getLoggedInStaff().canAccessHabitat(habitat))
             throw new ZooException("You are not assigned to this habitat.");
-        }
+
+        animalDAO.deleteAnimal(animal.getId());
         habitat.removeAnimal(animal);
-        setLastMessage(animal.getName() + " removed from " + habitat.getName());
+        animals.remove(animal);
     }
 
-    public void createHabitat(String type, Food food) throws ZooException {
+    public void createHabitat(String name, String type, int capacity, Food food) throws ZooException {
         if (!requirePermission(HABITAT_MANAGE)) return;
-
         Habitat h = defineHabitats(type, food);
         if (h != null) {
+            h.setName(name);
+            h.setCapacity(capacity);
+            habitatDAO.createHabitat(h);
             habitats.add(h);
             setLastMessage("Habitat created successfully.");
         }
     }
 
-    public void assignHabitatToKeeper(int staffId, Habitat habitat) throws ZooException {
-        if (!requirePermission(STAFF_MANAGE)) return;
+    public void removeHabitat(String name) throws ZooException {
+        if (!requirePermission(HABITAT_MANAGE)) return;
 
-        Staff staff = users.stream()
-            .filter(s -> s.getId() == staffId).findFirst()
-            .orElseThrow(() -> new ZooException("Staff not found."));
+        Habitat target = habitats.stream()
+                .filter(h -> h.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElseThrow(() -> new ZooException("Habitat not found: " + name));
 
-        try {
-            staff.assignHabitat(habitat);
-            setLastMessage("Habitat assigned successfully.");
-        } catch (UnsupportedOperationException e) {
-            throw new ZooException(staff.getUsername() + " cannot be assigned habitats.");
-        }
-    }
+        if (!target.getAnimals().isEmpty())
+            throw new ZooException("Cannot remove \"" + name + "\": "
+                    + target.getAnimals().size() + " animal(s) still inside.");
 
-    public void viewHabitatSchedules(Habitat habitat) throws ZooException {
-        if (!requirePermission(VIEW_REPORT)) return;    
-
-
-        if (habitat == null) {
-        throw new ZooException("Cannot view schedules: Habitat is null.");
-        }
-
-        try {
-                System.out.println("--- Schedules for " + habitat.getName() + " ---");
-                habitat.getFeedingTimes().forEach(s -> System.out.println(s)); 
-        } catch (Exception e) {
-            throw new ZooException("Error viewing schedules: " + e.getMessage());
-        }
+        habitatDAO.deleteHabitat(target.getId());
+        habitats.remove(target);
+        setLastMessage("Habitat " + name + " removed.");
     }
 
     // --- FOOD & SCHEDULE ---
-    public void addFoodToInventory(Food food) throws Exception {
-        String sql = "INSERT INTO food (name, stock, expiry_date, costPerUnit) VALUES (?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, food.getName());
-            ps.setDouble(2, food.getStock());
-            ps.setString(3, food.getExpiryDate());
-            ps.setDouble(4, food.getCostPerUnit());
-            ps.executeUpdate();
-
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) food.setId(rs.getInt(1));
-            }
-
-            foodInventory.add(food);
-        }
+    public void addFoodToInventory(Food food) throws ZooException {
+        foodDAO.addFood(food);
+        foodInventory.add(food);
     }
 
-    public void removeFoodFromInventory(int id) throws Exception {
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM food WHERE food id = ?")) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
-        }
+    public void removeFoodFromInventory(int id) throws ZooException {
+        foodDAO.deleteFood(id);
         foodInventory.removeIf(f -> f.getId() == id);
-    }
-
-    public void feedHabitat(Habitat habitat, int foodId, double amount) throws ZooException {
-        if (!requirePermission(FOOD_MANAGE)) return;
-
-        if (!getLoggedInStaff().canAccessHabitat(habitat)) {
-            throw new ZooException("You are not assigned to this habitat.");
-        }
-
-        Food food = foodInventory.stream()
-                .filter(f -> f.getId() == foodId)
-                .findFirst()
-                .orElseThrow(() -> new ZooException("Food not found."));
-
-        if (food.getStock() < amount) {
-            throw new ZooException("Not enough food in storage.");
-        }
-
-
-
-        food.setStock( (food.getStock() - amount));
-        setLastMessage("Habitat fed successfully.");
     }
 
     public void addScheduleToHabitat(Schedule schedule, Habitat habitat) throws ZooException {
@@ -329,25 +261,29 @@ public class Zoo {
         setLastMessage("Schedule added.");
     }
 
-    // --- REPORTS ---
-    public void viewZooReport() throws ZooException {
-        if (requirePermission(VIEW_REPORT)) {
-            ZooReport summaryReport = () -> {
-                System.out.println("--- " + getZooName().toUpperCase() + " SUMMARY REPORT ---");
-                System.out.println("Total Staff: " + users.size());
-                System.out.println("Active Habitats: " + habitats.size());
-                System.out.println("Generated by: " + getLoggedInStaff().getName());
-            };
-            summaryReport.generateReport();
+    public void removeSchedule(int scheduleId) throws ZooException {
+        if (!requirePermission(SCHEDULE_MANAGE)) return;
+
+        // Remove from database
+        scheduleDAO.deleteSchedule(scheduleId);
+
+        // Remove from memory list
+        schedules.removeIf(s -> s.getId() == scheduleId);
+
+        // Remove from habitat's feedingTimes
+        for (Habitat h : habitats) {
+            h.getFeedingTimes().removeIf(s -> s.getId() == scheduleId);
         }
+
+        setLastMessage("Schedule removed successfully.");
     }
 
     private Habitat defineHabitats(String type, Food food) throws ZooException {
         if (type.equals("forest")) return new Forest(null, food);
         if (type.equals("ocean")) return new Ocean(null, food);
         if (type.equals("savannah")) return new Savannah(null, food);
-        
-        throw new ZooException("Unknown habitat type. Use: forest, ocean, savannah.");
+
+        throw new InvalidHabitatException("Unknown habitat type: " + type + ". Use: forest, ocean, savannah.");
     }
 
 
