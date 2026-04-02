@@ -65,7 +65,8 @@ public class AnimalDAO {
     }
 
     public void addAnimal(Animal animal, String habitatName) throws ZooException {
-        String sql = "INSERT INTO animal (name, age, species, weight, habitat_name) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO animal (name, age, species, weight_kg, habitat_id ) " + 
+                     "VALUES (?, ?, ?, ?, (SELECT habitat_id FROM habitat WHERE name = ?))";
         try (Connection conn = MySqlDatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, animal.getName());
