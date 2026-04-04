@@ -1,6 +1,5 @@
 package com.zoo.services;
 
-import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
 import com.zoo.dao.*;
 import com.zoo.exceptions.*;
 import com.zoo.models.Animal;
@@ -11,10 +10,6 @@ import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.habitat_types.Ocean;
 import com.zoo.models.habitat_types.Savannah;
 import com.zoo.models.staff_roles.Staff;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +52,7 @@ public class Zoo {
         System.out.println("System: Loaded " + animals.size() + " animals from database.");
     
         loggedInUser = null;
-        lastMessage = "Zoo Created. Default: admin1 / 12345678";
+        lastMessage = "Zoo Created. Default: manager@zoo.com / 12345678";
     } 
 
     public void initializeData() {
@@ -99,6 +94,7 @@ public class Zoo {
     public String getZooName() { return zooName; }
     public String getAddress() { return address; }
     public List<Habitat> getHabitats() { return habitats; }
+    public ScheduleDAO getScheduleDAO() { return scheduleDAO; }
     public Staff getLoggedInStaff() { return loggedInUser; }
 
     private boolean isBlank(String s) {
@@ -154,7 +150,7 @@ public class Zoo {
         if (loggedInUser != null) {
             String name = loggedInUser.getUsername();
             loggedInUser = null;
-            setLastMessage(name + " logged out."); // Replaced throw with message for success
+            setLastMessage(name + " logged out."); 
         }
     }
 

@@ -40,8 +40,8 @@ public class FoodDAO {
                 list.add(f);
             }
 
-        } catch (SQLException e) {
-            throw new ZooException("Food loading failed: " + e.getMessage());
+        } catch (Exception e) {
+            throw new ZooException("Failed to load inventory: " + e.getMessage());
         }
         return list;
     }
@@ -59,7 +59,7 @@ public class FoodDAO {
                 if (rs.next()) food.setId(rs.getInt(1));
             }
             return food;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Failed to add food: " + e.getMessage());
         }
     }
@@ -70,7 +70,7 @@ public class FoodDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, foodId);
             ps.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Failed to delete food: " + e.getMessage());
         }
     }

@@ -476,15 +476,18 @@ public class ZooLoginGUI {
             public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        try {
+        try { 
+            
+            
             for (Habitat h : zoo.getHabitats()) {
+            double performance = zoo.getScheduleDAO().getFeedingPerformance(h.getId());
                 model.addRow(new Object[]{
                         h.getName(),
                         h.getClass().getSimpleName(),
                         h.getFood().getName(),
                         h.getCapacity(),
                         h.getAnimals().size(),
-                        h.getFeedingPerformance() + "%"
+                        String.format("%.1f%%", performance)
                 });
             }
         } catch (Exception e) {
@@ -563,7 +566,7 @@ public class ZooLoginGUI {
                                 added.getFood().getName(),
                                 added.getCapacity(),
                                 0,
-                                added.getFeedingPerformance() + "%"
+                                zoo.getScheduleDAO().getFeedingPerformance(added.getId()) + "%"
                         });
                         JOptionPane.showMessageDialog(dashboardFrame, "Habitat added successfully!");
 
@@ -1232,14 +1235,16 @@ public class ZooLoginGUI {
         };
 
         try {
-            for (Habitat h : zoo.getHabitats()) {
+            for (Habitat h : zoo.getHabitats()) { 
+                double performance = zoo.getScheduleDAO().getFeedingPerformance(h.getId());
+                
                 model.addRow(new Object[]{
                         h.getName(),
                         h.getClass().getSimpleName(),
                         h.getAnimals().size(),
                         h.getCapacity(),
                         h.getFood().getName(),
-                        h.getFeedingPerformance() + "%"
+                        String.format("%.1f%%", performance)
                 });
             }
         } catch (Exception e) {

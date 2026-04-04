@@ -1,21 +1,26 @@
 package com.zoo.controller;
-
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.util.Properties;
 
 public class MySqlDatabaseConnection {
-    // Update these to match your MySQL Workbench settings
-    private static final String URL = "jdbc:mysql://localhost:3306/zoofeedingschedule";
-    private static final String USER = "YOUR_USERNAME"; 
-    private static final String PASSWORD = "YOUR_PASSWORD"; 
-
-    public static Connection getConnection() throws SQLException {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
-        } catch (ClassNotFoundException e) {
-            throw new SQLException("MySQL Driver not found: " + e.getMessage());
+   public static Connection getConnection() throws Exception {
+    Properties props = new Properties();
+    
+    // This method is much smarter: it looks in the 'classpath' (src/bin folders)
+    try (InputStream is = MySqlDatabaseConnection.class.getClassLoader().getResourceAsStream("config.properties")) {
+        if (is == null) {
+            throw new FileNotFoundException("Could not find config.properties in the project classpath!");
         }
+        props.load(is);
     }
+
+    return DriverManager.getConnection(
+        props.getProperty("db.url"),
+        props.getProperty("db.user"),
+        props.getProperty("db.password")
+    );
+}
 }

@@ -3,11 +3,11 @@ package com.zoo.dao;
 import com.zoo.controller.MySqlDatabaseConnection;
 import com.zoo.exceptions.*;
 import com.zoo.models.Food;
+import com.zoo.models.Schedule;
 import com.zoo.models.habitat_types.Forest;
 import com.zoo.models.habitat_types.Habitat;
 import com.zoo.models.habitat_types.Ocean;
 import com.zoo.models.habitat_types.Savannah;
-import com.zoo.models.Schedule;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,7 +106,7 @@ public class HabitatDAO {
                 habitats.add(h);
 
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Database error: " + e.getMessage());
         }
         return habitats;
@@ -132,7 +132,7 @@ public class HabitatDAO {
                     return id;
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Failed to create habitat: " + e.getMessage());
         }
         throw new ZooException("Failed to get generated ID for habitat.");
@@ -145,7 +145,7 @@ public class HabitatDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, habitatId);
             ps.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Failed to delete habitat: " + e.getMessage());
         }
     }
