@@ -69,5 +69,4 @@ The application follows a structured **N-Tier Architecture** to ensure low coupl
 * **LinkedIn:** https://www.linkedin.com/public-profile/settings?trk=d_flagship3_profile_self_view_public_profile
 * **Portfolio:** https://portfolio-dina-seng-9ego6ko1b-dinasengs-projects.vercel.app/
 * **PITOU's contact:** 
-* **LinkedIn:** [Your LinkedIn URL Here]
-* **Portfolio:** [Your Portfolio/Website URL Here]
+* **LinkedIn:** www.linkedin.com/in/sor-channorakpitou-03496a385
