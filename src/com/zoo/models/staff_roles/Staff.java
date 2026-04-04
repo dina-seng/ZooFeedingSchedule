@@ -1,0 +1,90 @@
+package com.zoo.models.staff_roles;
+import com.zoo.interfaces.IStaff;
+import com.zoo.models.habitat_types.Habitat;
+import java.util.Objects;
+
+@FunctionalInterface
+interface HabitatAccess {
+    boolean canAccessHabitat(Habitat habitat);
+}
+
+public abstract class Staff implements IStaff, HabitatAccess{
+    private String name, username, password;
+    private boolean status;
+    int id;
+
+    // Constructor
+    public Staff(int id, String name, String username, String password) {
+        this.id = id;
+        this.name = validateName(name);
+        this.username = validateUsername(username);
+        this.password = validatePassword(password);
+        this.status = true;
+    }
+
+    protected String getPassword() { return password; }
+
+    // Getters
+    @Override
+    public int getId(){ return id; }
+    @Override
+    public String getUsername(){return username;}
+    @Override
+    public String getName(){return name;}
+    @Override
+    public boolean isActive() { return status; }
+
+    // Checking password
+    @Override
+    public boolean checkPassword(String input) {
+        return this.password != null && this.password.trim().equals(input.trim());
+    }
+
+    // Helpers
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    // Setters
+    public void setName(String name) {
+        this.name = validateName(name);
+    }
+
+    @Override
+    public String toString() {
+        return "Staff [name=" + name + ", username=" + username + ", password=" + password
+                +", status=" + status + "]";
+    }
+
+    @Override
+    public abstract boolean can(String action);
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        final Staff other = (Staff) obj;
+        return Objects.equals(this.id, other.id);
+    }
+
+
+    private String validateName(String name) {
+        return isBlank(name) ? "NA" : name.trim();
+    }
+
+    private String validateUsername(String username) {
+        return isBlank(username) ? "NA" : username;
+    }
+
+    public String validatePassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password required (min 8 chars)");
+        }
+        return password;
+    }
+
+}

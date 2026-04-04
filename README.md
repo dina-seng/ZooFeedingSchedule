@@ -1,50 +1,73 @@
-# ZooFeedingSchedule System
+# 🦁 Zoo Management System (ZMS)
+### *Enterprise Java Desktop Application for Wildlife Logistics*
 
-📌 Project Overview
+![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Swing](https://img.shields.io/badge/UI-Swing-blue?style=for-the-badge)
 
-The Zoo Feeding Schedule System is a console-based Java application designed to manage zoo animals and their feeding activities and demonstrate Object-Oriented Programming principles.
-The system manages zoo animals, their feeding schedules, food types, and caretakers using proper OOP concepts such as encapsulation, inheritance, polymorphism, abstraction, interfaces.
-All data is persisted in array of the objects.
+## 📌 Project Overview
+The **Zoo Management System** is a robust management tool built to handle the complex daily operations of a modern zoo. This project focuses on managing specialized staff roles, diverse animal habitats (Forest, Ocean, Savannah), and real-time food inventory tracking.
 
-+ Project Structure
-```
-ZooFeedingSchedule/
-│
-├── src/
-│   ├── main/
-│   │   └── Main.java                    
-│   │
-│   ├── model/                           
-│   │   ├── Animal.java                  
-│   │   ├── Service.java
-│   │   ├── Habitat.java                
-│   │   └── Food.java                  
-│   │
-│   └── util/                           
-│       └── ZooConfig.java
-|
+This was developed as a core project during my Software Engineering track at **CADT**, emphasizing **Object-Oriented Programming (OOP)** and the **Data Access Object (DAO)** design pattern.
 
-```                                            
-+ Objectives
-    - Learn and apply OOP concepts in Java
-    - Use classes and objects correctly
-    - Understand inheritance, polymorphism, and abstraction
-    - Build a structured Java program
+---
 
-+ OOP Concepts Used
-    - Encapsulation
-    - Inheritance
-    - Polymorphism
-    - Abstraction
-    - Interface
-    - Collections
+## ✨ Key Features
+* **Role-Based Access Control (RBAC):** Distinct functionalities for `Manager` and `Keeper` roles using Inheritance.
+* **Automated Feeding Schedules:** Logic-driven scheduling based on animal type and habitat requirements.
+* **Habitat Management:** Scalable architecture to add new habitats (Ocean, Forest, etc.) without breaking existing logic.
+* **Data Persistence:** Full integration with **MySQL** via JDBC for reliable data storage.
+* **Custom Exception Layer:** Professional error handling (e.g., `InvalidNameException`, `ZooException`) to ensure application stability.
 
-+ Benefits of the System
-    - Organizes zoo data efficiently
-    - Makes feeding management easier for caretakers
-    - Demonstrates practical use of OOP in Java
-    - Can be expanded with GUI or database later
+---
 
-+ Author
-    - Name: Sor Channorakpitou & Seng Dina
-    - Institution: Cambodia Academy of Digital Technology
+## 🏗️ Technical Architecture
+The application follows a structured **N-Tier Architecture** to ensure low coupling and high cohesion:
+
+1.  **Presentation Layer:** Java Swing GUI for user interaction.
+2.  **Service Layer (`Zoo.java`):** Centralized business logic and state management.
+3.  **Data Access Layer (DAO):** Dedicated classes for SQL operations, separating database logic from the UI.
+4.  **Model Layer:** OOP-based entities utilizing Abstraction and Encapsulation.
+
+---
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+* **JDK 17** or higher
+* **MySQL Server** 8.0+
+* **VS Code** (with Java Extension Pack)
+
+### Steps to Run
+1.  **Clone the Repository:**
+    ``` bash
+    git clone https://github.com/Sor-Channorakpitou/ZooFeedingSchedule.git
+    ```
+2.  **Database Configuration:**
+    * Create a database named `zoo_db`.
+    * Run the provided SQL script (usually found in `/database/db_setup.sql`).
+    * Update your credentials in `MySqlDatabaseConnection.java`.
+3.  **Build and Launch:**
+    * Open the project in VS Code.
+    * Run `ZooLoginGUI.java` to start the application.
+
+---
+
+## 🎓 OOP Principles Applied
+* **Inheritance & Abstraction:** Used an `Abstract Habitat` class to define core behaviors for specific environments like `Forest` or `Ocean`.
+* **Polymorphism:** Managed a diverse list of Staff and Habitats through parent-class references, allowing for easy system extension.
+* **Encapsulation:** Protected sensitive data (like salaries and passwords) using private fields and validated accessors.
+* **Separation of Concerns:** Kept SQL logic strictly inside DAO classes, making the UI "Database Agnostic."
+
+---
+
+## 👤 Author
+**Seng Dina - Sor Channorakpitou**
+* **Role:** Software Engineering Student
+* **Institution:** Cambodia Academy of Digital Technology (CADT) 
+* **DINA's contact:** 
+* **LinkedIn:** https://www.linkedin.com/public-profile/settings?trk=d_flagship3_profile_self_view_public_profile
+* **Portfolio:** https://portfolio-dina-seng-9ego6ko1b-dinasengs-projects.vercel.app/
+* **PITOU's contact:** 
+* **LinkedIn:** [Your LinkedIn URL Here]
+* **Portfolio:** [Your Portfolio/Website URL Here]
