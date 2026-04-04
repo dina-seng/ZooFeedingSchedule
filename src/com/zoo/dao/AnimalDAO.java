@@ -56,7 +56,7 @@ public class AnimalDAO {
                 list.add(a);
             }
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             // Print the real error so you can see it during development
             System.err.println("SQL Error in AnimalDAO: " + e.getMessage());
             throw new ZooException("SQL Error in AnimalDAO: " + e.getMessage());
@@ -78,7 +78,7 @@ public class AnimalDAO {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) animal.setId(rs.getInt(1));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Failed to add animal: " + e.getMessage());
         }
     }
@@ -89,7 +89,7 @@ public class AnimalDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, animalId);
             ps.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ZooException("Failed to delete animal: " + e.getMessage());
         }
     }

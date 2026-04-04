@@ -40,13 +40,6 @@ public abstract class Habitat implements IHabitat {
     public void setLocation(String loc) { this.location = loc; }
     public void setCapacity(int cap)    { this.capacity = cap; }
 
-    public double getFeedingPerformance() {
-        if (this.feedingTimes == null || this.feedingTimes.isEmpty()) return 0.0;
-        long completed = this.feedingTimes.stream()
-                .filter(Schedule::isCompleted).count();
-        double performance = ((double) completed / this.feedingTimes.size()) * 100;
-        return Math.round(performance * 100.0) / 100.0;
-    }
 
     @Override public void addAnimal(Animal animal)       { animals.add(animal); }
     @Override public void removeAnimal(Animal animal)    { animals.remove(animal); }

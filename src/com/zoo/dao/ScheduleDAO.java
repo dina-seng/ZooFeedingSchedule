@@ -1,5 +1,6 @@
 package com.zoo.dao;
 
+import com.zoo.controller.MySqlDatabaseConnection;
 import static com.zoo.controller.MySqlDatabaseConnection.getConnection;
 import com.zoo.exceptions.ZooException;
 import com.zoo.models.Schedule;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public class ScheduleDAO {
 
-    public List<Schedule> getAllSchedules() throws ZooException {
+    public  List<Schedule> getAllSchedules() throws ZooException {
         List<Schedule> schedules = new ArrayList<>();
 
         // Select all required fields
@@ -64,7 +65,7 @@ public class ScheduleDAO {
                 schedules.add(sch);
             }
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new ZooException("Failed to load schedules: " + e.getMessage());
         }
@@ -85,13 +86,35 @@ public class ScheduleDAO {
     }
 
     // Optional: method to update completion status
-    public static void updateCompletionStatus(int scheduleId, boolean completed) throws SQLException {
+    public static void updateCompletionStatus(int scheduleId, boolean completed) throws Exception {
         String sql = "UPDATE feeding_schedule SET completed = ? WHERE schedule_id = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setBoolean(1, completed);
             stmt.setInt(2, scheduleId);
             stmt.executeUpdate();
+        }catch (Exception e) {
+            throw new Exception("Failed to update schedule completion status: " + e.getMessage());
         }
+    } 
+    public double getFeedingPerformance(int habitatId) throws Exception {
+    // SQL does the calculation: (completed / total) * 100
+    String sql = "SELECT (COUNT(CASE WHEN completed = TRUE THEN 1 END) * 100.0 / COUNT(*)) as performance " +
+                 "FROM feeding_schedule WHERE habitat_id = ?";
+
+    try (Connection conn = MySqlDatabaseConnection.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        
+        pstmt.setInt(1, habitatId);
+        
+        try (ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble("performance");
+            }
+        }
+    } catch (Exception e) {
+        System.err.println("Performance Calculation Error: " + e.getMessage());
     }
+    return 0.0; // Default if no schedules exist
+}
 }
