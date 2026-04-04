@@ -28,7 +28,7 @@ CREATE TABLE `animal` (
   `species` varchar(100) NOT NULL,
   `diet_type` enum('HERBIVORE','CARNIVORE','OMNIVORE') NOT NULL,
   `weight_kg` decimal(8,2) NOT NULL,
-  `date_of_birth` date DEFAULT NULL,
+  `age` int DEFAULT NULL,
   `habitat_id` int NOT NULL,
   PRIMARY KEY (`animal_id`),
   KEY `fk_animal_habitat` (`habitat_id`),
